@@ -1,0 +1,41 @@
+\section{Introduction}
+
+Programming geo-distributed replicated systems is hard given the complexity
+of reasoning about constantly evolving states at different replicas.
+Uncoordinated updates to replicas lead to states that are unlikely to
+converge. A prominent approach to overcome this problem is to reorganize
+the replicated state in terms of Commutative Replicated Data Types (CRDTs).
+CRDTs require operations on the replicated state to commute, thereby
+allowing such operations to be executed in different orders at replicas.
+Applications composed of CRDTs therefore needn’t make assumptions about the
+behavior of the underlying network; as long as the network eventually
+delivers all in-flight messages, the replica states are guaranteed to
+eventually converge. This guarantee is called Strong Eventual Consistency
+(SEC). SEC is a sufficient condition to ensure eventual convergence of
+replicated state. As such it provides a principled approach to build
+distributed applications by composing CRDTs. It is however worthwhile to
+note that SEC is not (proven to be) a necessary condition, and therefore
+does not rule out the possibility of alternative approaches towards
+convergent replicated state. Such an alternative approach is particularly
+attractive if it frees application programming from the constrains of
+commutativity.
+
+The current work (SC MRDTs) proposes one such approach. The key idea behind
+SC MRDTs is to decouple the orthogonal concerns of distributed applications
+that are conflated by CRDTs, namely (1). Availability: the ability to
+immediately apply updates to local replica without coordination, and (2).
+Convergence: the ability to eventually apply updates at remote replicas in
+a way that guarantees convergence. Note that while the Availability concern
+explicitly rules out inter-replica coordination, Convergence doesn’t. In
+other words, it is permissible for replicas to coordinate among themselves
+to achieve convergent replication, as long as such coordination doesn’t
+make a replica unavailable to its users.  SC MRDTs exploit this
+observation. Like CRDTs, SC MRDTs allow updates from user-submitted
+operations to be applied immediately to the local replica to minimize the
+user-perceived latency. Unlike CRDTs however, SC MRDTs do not allow updates
+to be applied at remote replica at arbitrary time and in arbitrary order.
+Instead, the system underlying SC MRDTs carefully orchestrates the
+distributed execution so as to merge the competing states at different
+replicas in an order that guarantees convergence. Thus, any data type with
+a merge operation qualifies to be a replicated data type without having to
+re-engineer its operations around the commutativity principle. 

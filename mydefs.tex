@@ -1,0 +1,249 @@
+% Math mode
+%-----------
+\newenvironment{nop}{}{}
+\newenvironment{smathpar}{
+\begin{nop}\small\begin{mathpar}}{
+\end{mathpar}\end{nop}\ignorespacesafterend}
+\newcounter{hypothesis}
+\newenvironment{hypothesis}{\refstepcounter{hypothesis}}{}
+
+% Theorem
+%--------
+
+\theoremstyle{plain}
+\newtheorem{axiom}{Axiom}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\newenvironment{example}[1][Example]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+% Decorations
+%-----------
+\newenvironment{decoration}
+  {\color{blue}\begin{array}{l}}
+  {\end{array}}
+
+% New colors
+%------------
+\definecolor{Bittersweet}{rgb}{1.0, 0.44, 0.37}
+\definecolor{MidnightBlue}{rgb}{0.0, 0.2, 0.4}
+\definecolor{BrightBlue}{rgb}{0.0, 0.2, 0.7}
+
+% Listings
+%----------
+\newcommand{\lstml}{
+\lstset{ %
+language=ML, % choose the language of the code
+basicstyle=\footnotesize\ttfamily,       % the size of the fonts that are used for the code
+keywordstyle=\color{Bittersweet},
+% numbers=left,                   % where to put the line-numbers
+numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+% frame=single,                   % adds a frame around the code
+tabsize=2,                      % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+commentstyle=\itshape\color{BrightBlue},
+%escapeinside={\%*}{*)},         % if you want to add a comment within your code
+mathescape=true,
+morekeywords={oper, txn, invariant, module, begin, match, when, @@deriving, not, : , txn_do, do, SQL/\\}
+}}
+\lstnewenvironment{ocaml}
+    { % \centering
+			\lstml
+      \lstset{}%
+      \csname lst@setfirstlabel\endcsname}
+    { %\centering
+      \csname lst@savefirstlabel\endcsname}
+\newcommand{\ocamlinline}[1]{\lstinline[language=ML,
+                                        basicstyle=\footnotesize\ttfamily, 
+                                        keywordstyle=\color{Bittersweet},
+                                        mathescape=true]!#1!}
+
+% SQL Trace 
+% ----------
+\newcommand{\lstsql}{
+\lstset{ %
+  language=SQL, % choose the language of the code
+  basicstyle=\footnotesize\ttfamily,       % the size of the fonts that are used for the code
+  keywordstyle=\color{MidnightBlue},
+  % numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
+  stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  % frame=single,                   % adds a frame around the code
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+  commentstyle=\itshape\color{BrightBlue},
+  %escapeinside={\%*}{*)},         % if you want to add a comment within your code
+  mathescape=true,
+  morekeywords={BEGIN, COMMIT, ROLLBACK}
+}}
+\lstnewenvironment{sqltrace}
+    { % \centering
+			\lstsql
+      \lstset{}%
+      \csname lst@setfirstlabel\endcsname}
+    { %\centering
+      \csname lst@savefirstlabel\endcsname}
+
+\newcommand{\sql}[1]{\lstinline[language=SQL,
+                                basicstyle=\footnotesize\ttfamily, 
+                                keywordstyle=\color{BrightBlue},
+                                breaklines=true,
+                                breakatwhitespace=false,
+                                mathescape=true,
+                                morekeywords={BEGIN, COMMIT, ROLLBACK}]!#1!}
+
+
+% Formatting
+%---------
+\newcommand{\C}[1]{\code{#1}}
+\newcommand{\tuplee}[1]{\langle #1 \rangle}
+\newcommand*{\rom}[1]{\expandafter\romannumeral #1}
+
+% Formatting commands
+% -------------------
+\newcommand{\code}[1]{{\tt #1}}
+\newcommand{\spc}[0]{\quad}
+\newcommand{\ALT}{~\mid~}
+\newcommand{\rel}[1]{{R}_{\mathit{#1}}}
+\newcommand{\conj}{~\wedge~}
+\newcommand{\disj}{~\vee~}
+\newcommand{\rulelabel}[1]{\textrm{\sc {#1}}}
+\newcommand{\ilrulelabel}[1]{{\sc #1}}
+\newcommand{\RULE}[2]{\frac{\begin{array}{c}#1\end{array}}
+                           {\begin{array}{c}#2\end{array}}}
+\newcommand{\txnimp}{\mbox{${\cal T}$}}
+\newcommand{\ssnimp}{{\sc SsnImp}\xspace}
+%\newcommand{\coloneqq}{::=}
+\newcommand{\qqquad}{\quad\quad}
+\newcommand{\cskip}{\C{SKIP}}
+\newcommand{\ctxn}[2]{\C{TXN}\langle #1 \rangle\{#2\}}
+\newcommand{\csess}[2]{\C{ssn}\langle #1 \rangle \{#2\}}
+\newcommand{\catomic}[1]{\C{ATOMIC}\{#1\}}
+\newcommand{\stepsto}{\longrightarrow}
+\newcommand{\rstepsto}{\longrightarrow_{R}}
+\newcommand{\stepssto}[1]{\longrightarrow^{#1}_{R}}
+\newcommand{\rstepssto}[1]{\longrightarrow^{#1}_{R}}
+\newcommand{\xstepsto}[1]{\longrightarrow_{#1}}
+\newcommand{\xstepssto}[2]{\longrightarrow^{#1}_{#2}}
+\newcommand{\tstepsto}{\longrightarrow}
+\newcommand{\redsto}{\hookrightarrow}
+\newcommand{\xtstepsto}[1]{\hookrightarrow_{#1}}
+\newcommand{\rtstepsto}{\hookrightarrow_R}
+\newcommand{\rtstepssto}[1]{\hookrightarrow^{#1}_R}
+\newcommand{\xtstepssto}[2]{\hookrightarrow^{#1}_{#2}}
+\newcommand{\hoare}[3]{\{#1\}\,#2\,\{#3\}}
+\newcommand{\defeq}[0]{\overset { \mathit{def} }{ = } }
+\newcommand{\rg}[3]{\{#1\}\,#2\,\{#3\}}
+%\newcommand{\defeq}[0]{ \triangleq }
+\newcommand{\op}{\textsf{op}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\F}{{\sf F}}
+\newcommand{\G}{{\sf G}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\T}{\mathcal{T}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\Lfull}{L}
+\newcommand{\Lnoloop}{L_{\diamond}}
+\newcommand{\Lnoif}{L_{\downarrow}}
+\newcommand{\visZ}{\textsf{vis}}
+\newcommand{\soZ}{\textsf{so}}
+\newcommand{\hbZ}{\textsf{hb}}
+\newcommand{\sameobj}[2]{\textsf{sameobj}(#1,#2)}
+\newcommand{\sameobjZ}{\textsf{sameobj}}
+\newcommand{\visar}{\xrightarrow{\visZ}}
+\newcommand{\hboar}{\xrightarrow{\textsf{hb}}}
+\newcommand{\soar}{\xrightarrow{\soZ}}
+\newcommand{\visoar}{\xrightarrow{\visZ \,\cup\, \soZ}}
+\newcommand{\invisar}{\xrightarrow{\textsf{invis}}}
+\newcommand{\etaar}{\xrightarrow{\eta}}
+\newcommand{\wrstoar}{\xrightarrow{\textsf{wrsto}}}
+\newcommand{\rdsfmar}{\xrightarrow{\textsf{rdsfm}}}
+\newcommand{\usesar}{\xrightarrow{\textsf{uses}}}
+\newcommand{\isReadf}{\textsf{isRD}}
+\newcommand{\isWritef}{\textsf{isWR}}
+\newcommand{\oper}{\textsf{oper}}
+\newcommand{\committed}{\textsf{com}}
+\newcommand{\txn}{\textsf{txn}}
+\newcommand{\ssn}{\textsf{ssn}}
+\newcommand{\id}{\textsf{id}}
+\newcommand{\kind}{\textsf{oper}}
+\newcommand{\obj}{\textsf{obj}}
+\newcommand{\rval}{\textsf{rval}}
+\newcommand{\visible}{\textsf{visible}}
+\newcommand{\maxId}{\textsf{maxId}}
+\newcommand{\aeval}{\textsf{aeval}}
+\newcommand{\underE}[1]{\E \Vdash #1}
+\newcommand{\underIT}[1]{\;\I,\C{Txn}_i \vdash #1\;}
+\newcommand{\underI}[1]{\;\I \vdash #1\;}
+\newcommand{\underT}[1]{\;\C{Txn}_i \vdash #1\;}
+\newcommand{\stable}{\mathtt{stable}}
+\newcommand{\iso}[1]{\emph{#1}}
+\newcommand{\writef}{\textsf{Write}}
+\newcommand{\readf}{\textsf{Read}}
+\newcommand{\commitf}{\textsf{Commit}}
+\newcommand{\eg}{\emph{e.g.,}}
+\newcommand{\GK}[1]{\textcolor{red}{#1}}
+\newcommand{\SJ}[1]{\textcolor{red}{SJ: #1}}
+\newcommand{\valid}{\textsf{valid}}
+
+\newcommand{\B}[1]{\small\bf #1}
+\newcommand{\txnbox}[1]{\lbrack #1 \rbrack}
+\newcommand{\Prop}{\mathbb{P}}
+\newcommand{\Pow}[1]{\mathcal{P}\left(#1\right)}
+\newcommand{\condexp}[3]{{#1?\,#2:\,#3}}
+\newcommand{\ite}[3]{\C{IF}\;#1\;\C{THEN}\;#2\;\C{ELSE}\;#3}
+\newcommand{\lete}[3]{\C{LET}\;#1=#2\;\C{IN}\;#3}
+\newcommand{\foreache}[2]{\texttt{FOREACH}\;#1\;\texttt{DO}\;#2}
+\newcommand{\inserte}[1]{\texttt{INSERT}\;t\;#1}
+\newcommand{\selecte}[1]{\texttt{SELECT}\;t\;#1}
+\newcommand{\deletee}[1]{\texttt{DELETE}\;t\;#1}
+\newcommand{\updatee}[2]{\texttt{UPDATE}\;t\;#1\;#2}
+\newcommand{\rollback}[0]{\texttt{ROLLBACK}}
+\newcommand{\mape}[2]{{\texttt{MAP}\;(#1)\;#2}}
+\newcommand{\folde}[3]{{\texttt{FOLD}\;(#1)\;#2\;#3}}
+\newcommand{\lambdae}[2]{\lambda #1.\,#2}
+\newcommand{\Rmem}{R_{mem}}
+\newcommand{\Rob}{R_{ob}}
+\newcommand{\Robs}{R_{ob}}
+\newcommand{\Roas}{R_{oa}}
+\newcommand{\Rio}{R_{io}}
+\newcommand{\Rans}{R_{ans}}
+\newcommand{\Rfst}{R_{fst}}
+\newcommand{\Rsnd}{R_{snd}}
+\newcommand{\Rpair}{R_{pair}}
+\newcommand{\Rk}{R_{k}}
+\newcommand{\Rkv}{R_{kv}}
+\newcommand{\Rto}{R_{to}}
+\renewcommand{\bar}[1]{\overline{#1}}
+\newcommand{\Rbar}{\bar{R}}
+\newcommand{\Tbar}{\bar{T}}
+\renewcommand{\merge}{\diamond}
+\newcommand{\rmerge}{\blacklozenge}
+\newcommand{\gammaord}{\gamma_{ord}}
+\newcommand{\quark}{{\sc Quark}\xspace}
+\newcommand{\hlabel}[1]{\begin{hypothesis}\label{#1}\end{hypothesis}\ref{#1}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\entails}{\vDash}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\colondash}{~\operatorname{:-}~}
