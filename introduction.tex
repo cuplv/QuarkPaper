@@ -1,41 +1,154 @@
 \section{Introduction}
 
-Programming geo-distributed replicated systems is hard given the complexity
-of reasoning about constantly evolving states at different replicas.
-Uncoordinated updates to replicas lead to states that are unlikely to
-converge. A prominent approach to overcome this problem is to reorganize
-the replicated state in terms of Commutative Replicated Data Types (CRDTs).
-CRDTs require operations on the replicated state to commute, thereby
-allowing such operations to be executed in different orders at replicas.
-Applications composed of CRDTs therefore needn’t make assumptions about the
-behavior of the underlying network; as long as the network eventually
-delivers all in-flight messages, the replica states are guaranteed to
-eventually converge. This guarantee is called Strong Eventual Consistency
-(SEC). SEC is a sufficient condition to ensure eventual convergence of
-replicated state. As such it provides a principled approach to build
-distributed applications by composing CRDTs. It is however worthwhile to
-note that SEC is not (proven to be) a necessary condition, and therefore
-does not rule out the possibility of alternative approaches towards
-convergent replicated state. Such an alternative approach is particularly
-attractive if it frees application programming from the constrains of
-commutativity.
+Large-scale web services and decentralized applications often rely on
+geo-distributed state replication to meet their latency and availability
+needs. An application's state is replicated asynchronously in such a
+setting, meaning that operations are independently executed at each
+replica, and updates are applied asynchronously at other replicas after a
+possible network delay. Asynchronous execution complicates programming and
+reasoning about distributed applications as it induces the possibility of
+conflicting updates leading to non-convergence and application integrity
+violations. Two basic approaches have been proposed to address this
+problem. The first approach is to selectively strengthen the system
+consistency to pre-empt the conflicting updates. The second is to redefine
+the application state in terms of \emph{Replicated Data Types} (RDTs) that
+are specially engineered to handle conflicting updates. Strengthening
+system consistency necessarily entails inter-replica coordination,
+therefore applications prefer to utilize RDTs as much as possible,
+resorting to consistency strengthening only when it is necessary to maintain
+application integrity. The common design principle guiding the development
+of replicated data types is commutativity. The idea is that if the
+replicated state is only updated by commutative operations, then updates
+can be applied in any order and the replica states are still guaranteed to
+converge. Indeed, there exist common usecases in web applications that can
+be implemented using Commutative Replicated Data Types
+(CRDTs)~\cite{crdts}. For instance, a video view counter on a streaming
+application such as YouTube can be implemented as a Counter CRDT that
+supports commutative increments.
 
-The current work (SC MRDTs) proposes one such approach. The key idea behind
-SC MRDTs is to decouple the orthogonal concerns of distributed applications
-that are conflated by CRDTs, namely (1). Availability: the ability to
-immediately apply updates to local replica without coordination, and (2).
-Convergence: the ability to eventually apply updates at remote replicas in
-a way that guarantees convergence. Note that while the Availability concern
-explicitly rules out inter-replica coordination, Convergence doesn’t. In
-other words, it is permissible for replicas to coordinate among themselves
-to achieve convergent replication, as long as such coordination doesn’t
-make a replica unavailable to its users.  SC MRDTs exploit this
-observation. Like CRDTs, SC MRDTs allow updates from user-submitted
-operations to be applied immediately to the local replica to minimize the
-user-perceived latency. Unlike CRDTs however, SC MRDTs do not allow updates
-to be applied at remote replica at arbitrary time and in arbitrary order.
-Instead, the system underlying SC MRDTs carefully orchestrates the
-distributed execution so as to merge the competing states at different
-replicas in an order that guarantees convergence. Thus, any data type with
-a merge operation qualifies to be a replicated data type without having to
-re-engineer its operations around the commutativity principle. 
+In general, however, commutativity is not a common occurrence among data
+types. Most common data type definitions come with at least a pair of
+operations that do not commute. For instance an \C{insert} and a \C{remove}
+operations on a set do not commute if both are for the same element.
+Likewise two \C{insert} operations for the same position in a list do not
+commute. Such non-commutative operations translate to conflicting updates
+in a distributed setting. For instance, concurrent \C{insert $k$} and
+\C{remove $k$} operations for an element $k$ in a replicated set are in
+conflict, and it is not clear what their cumulative result should
+be\footnote{Here, the \C{insert} $i$ is assumed to have witnessed a
+  \C{remove} $r'$ that is distinct from the earlier \C{remove} $r$. Both
+  $i$ and $r'$ are concurrent to $r$, hence their effects are not visible
+  during $r$'s execution.}. To use such a non-commutative data type in a
+replicated setting, creative re-engineering of its internal representation
+and algorithms is needed to turn it into a bonafide CRDT with a sensible
+distributed semantics. In the case of set data type, that could involve
+changing the internal representation to maintain two sets -- a set
+containing the current elements and a \emph{tombstone} set that contains
+every element that has ever been deleted from the set. A \C{remove
+$k$} operation removes $k$ from the element set and adds it to the
+tombstone set, and an \C{insert $k$} operation adds $k$ to the element set
+only if it is not present in the tombstone set (i.e., only if $k$ was not
+previously deleted from the set). This results in a CRDT set called
+\emph{two-phase set} where an element once removed cannot be re-added. 
+
+A more complex re-engineering of the set data type could result in a set
+CRDT with a different (and arguably more useful) semantics.
+Sec.~\ref{sec:motivation} describes a \emph{remove-wins} CRDT set, which
+allows elements to be readded, but which prioritizes \C{remove}s over
+concurrent \C{insert}s. This transformation requires vector
+clocks~\cite{vectorclock} to keep track of casual ordering among
+\C{insert}s and \C{remove}s. In fact most CRDTs have carefully-crafted
+implementations involving non-trivial technical devices like vector
+clocks. For instance, Replicated Growable Array (RGA) -- a CRDT for
+collaborative editing~\cite{rga}, makes use of a variant of Lamport
+timestamps~\cite{lamportts}; TreeDoc, another collaborative-editing CRDT,
+makes use of \emph{dense linear orders}~\cite{treedoc}; and JSON CRDT -- a
+CRDT variant of the JSON storage format, implements transactional semantics
+and causal dependency sets~\cite{jsoncrdt}. Such complexity makes it very
+hard to reason about basic correctness properties of CRDTs, such as
+convergence (formally known as \emph{strong eventual
+consistency}~\cite{crdts}).  Indeed, formal verification of strong eventual
+consistency for a subset of the aforementioned CRDTs required considerable
+effort on behalf of multiple authors who are experts in the
+field~\cite{kleppmann2017}. The need for such advanced implementation and
+reasoning techniques makes the development of new CRDTs a research exercise
+to be undertaken only by experts.
+
+% hinders the widespread adoption of replicated data
+% types in software development.
+In this paper we propose an alternative approach to replicated data types
+that addresses the problems discussed above. Our approach differs from the
+CRDT approach in two fundamental ways. Firstly, we adopt a state-centric
+model of replication with \emph{mergeability} of states as the defining
+characteristic in contrast to CRDTs' operation-centric model characterized
+by commutativity. Unlike commutativity, mergeability does not require a
+full-scale re-engineering of the data type definition. Instead,
+a data type only has to define a merge semantics in form a \C{merge}
+function to reconcile concurrent versions of the type in presence of their
+common ancestor version. Notably, \C{merge} function is left completely
+unconstrained even as convergence is guaranteed on the corresponding
+\emph{mergeable replicated data type} (MRDT)~\cite{mrdt}. Such strong
+guarantees are possible due to the simplicity of state-based reasoning
+relative to the operation- or trace-based one. Note that state-centric
+model of replication has also been adapted to CRDTs, but such state-based
+CRDTs require the replicated state to be organized as a lattice to
+guarantee convergence -- a restriction we eliminate in our setting. 
+
+The second distinguishing aspect of our approach is the utilization of a
+distributed runtime that orchestrates \emph{well-formed} distributed
+executions that are guaranteed to converge. Note that it is easy to
+construct a trivial runtime that guarantees convergence of all executions.
+Such a runtime would make an extensive use of inter-replica coordination to
+synchronize the execution of every operation and thus induce a
+sequentially-consistent behavior. This would however defeat the purpose of
+state replication as the latency incurred for synchronized execution of an
+operation is prohibitively high, and the availability of the system during
+the execution is correspondingly low. It is therefore important for a
+distributed runtime of RDTs to not synchronize the execution of RDT
+operations. Orchestrating a well-formed convergent execution without
+impacting latency and availability may seem impossible due to the CAP
+theorem~\cite{cap}, but it is not the case in fact. While CAP theorem does
+rule out linearizability, it does not prohibit enforcing weaker consistency
+constraints on distributed executions. In fact many CRDTs, including the
+aforementioned \emph{remove-wins} set, implicitly assume \emph{causal
+consistency}, which is weaker than linearizability but is stronger than the
+default \emph{eventual consistency}. While causal consistency alone cannot
+guarantee convergence, it sufficiently constrains the distributed execution
+for the CRDT implementations to guarantee convergence. In this respect our
+  approach differs in the sense that (a). It identifies a novel set of
+  constraints on distributed execution that guarantee convergence of an
+  MRDT \emph{regardless} of its merge semantics, and (b). It localizes
+  those constraints spatially and temporally into the runtime such that
+  per-operation latency and system-wide availability remain unaffected.
+Sec.~\ref{sec:semantics} explains our runtime in detail. 
+
+\paragraph{Contributions} The contributions of this paper are summarized
+below:
+\begin{itemize}
+  \item We present a model of state replication for \emph{mergeable} data
+  types, i.e., data types equipped with a \C{merge} function, and identify a
+  structural well-formedness condition over distributed executions that is
+  sufficient to guarantee their convergence. This is in contrast to
+  existing models of replicated data types, where each type is obligated to
+  prove its convergence.
+
+  \item We formalize a distributed runtime called \quark that orchestrates
+  well-formed distributed executions. We prove the correctness of \quark,
+  and also demonstrate its \emph{progress} property, namely that no
+  distributed execution would ever get ``stuck''. Besides the manual proofs
+  for the theorems, we also provide the full formalization of the \quark
+  system and its properties in Alloy~\cite{alloy} and Ivy~\cite{ivy}. The
+  Ivy formalization of \quark has been automatically verified with help of
+  Z3~\cite{z3}. To the best of our knowledge, this is the first time an SMT
+  solver was used to verify the \emph{meta-theory} of a formal setup.
+
+  \item We realize an implementation of \quark as a light-weight shim layer
+  on top of Scylla -- an off-the-shelf distributed key-value
+  store~\cite{scylla}. An evaluation over several mergeable replicated data
+  types (MRDTs) demonstrate that \quark has \emph{no} effect on the latency
+  and availability of the system. To demonstrate the trade-offs not
+  captured by latency and availability, we invent a new metric called
+  \emph{staleness} and show that our approach does affect it negatively, albeit
+  within the tolerable limits.
+\end{itemize}
+
