@@ -1,0 +1,187 @@
+\section{Motivation}
+\label{sec:motivation}
+
+In this section we motivate our runtime-assisted approach to
+convergent RDTs with help of a set data structure.
+% demonstrates the need for run-time intervention to ensure convergence.
+
+\subsection{Add-Wins Set RDT}
+
+Fig.~\ref{fig:ocaml-set} shows a simplified interface of a set data
+type in OCaml. The interface hides a reference to a set (\C{Set.t}),
+which can be updated in-place via \C{insert} and \C{remove}
+operations. As such \C{Set} is an ordinary data type primarily
+designed for sequential execution. Under a concurrent execution with
+an asynchronously replicated state, \C{Set} would exhibit anamolous
+behaviours such as those in Fig.~\ref{fig:crdt-execs}.
+
+Fig.~\ref{fig:crdt-execs-1} shows an anamolous execution with three
+replicas -- $R_1$, $R_2$, and $R_3$, all of which start with a
+singleton set containing the element $e$. A client connects to the
+replica $R_3$ and executes a \C{remove $e$} operation, which is then
+asynchronously propagated to other replicas. Some time after applying
+$R_3$'s \C{remove} at $R_2$, another client connects to $R_2$ and
+re-adds $e$ by issuing an \C{insert $e$} operation. Consequently, the
+state at $R_2$ is again the singleton set $\{e\}$. Replica $R_3$
+however receives $R_2$'s \C{insert} ahead of $R_1$'s \C{remove},
+applies them in the same order, and ends up with an empty set. The
+execution thus results in divergent replica states.
+
+Note that if set \C{insert} and \C{remove} commute, then executing
+them in different order at $R_2$ and $R_3$ would not have led to
+divergence. As such, \C{Set} is not a CRDT due to the admittance of
+non-commutative operations. Nonetheless \C{Set} can be transformed
+into a CRDT by re-engineering its interface and operations. For
+instance, the anomalous execution in Fig.~\ref{fig:crdt-execs-1} can
+be pre-empted by ensuring that updates are only ever applied in the
+causal order.  This can be done by extending \C{Set} with vector
+clocks to keep track of the causal history of each operation. A set
+\C{insert} (resp. \C{remove}) would now generate an \C{Insert} (resp.
+\C{Remove}) \emph{effect} tagged with the vector clock of the origin
+replica. Here, the vector clock simply records the sequence number of
+last operation from each replica whose effect has been received and
+applied at the current replica. When an effect is received at a
+replica, it is buffered until the time all its causally-preceding
+effects (as captured by the tagged vector clock) have already been
+received and applied. This strategy would preempt the execution in
+Fig.~\ref{fig:ctrdt-execs-1} by buffering $R_2$'s \C{insert} at $R_1$
+until the causally-preceding \C{remove} of $R_1$ is received and
+applied. An interface for such a \emph{causally-consistent} set RDT is
+shown in Fig.~\ref{fig:cc-set}. 
+
+Unfortunately, \C{Set} data type of Fig.~\ref{fig:cc-set} still admits
+divergent executions due to concurrent updates.
+Fig.~\ref{fig:crdt-execs-2} describes one such execution. Here,
+replicas $R_1$ and $R_2$ both start with a singleton set $\{e\}$.
+Two distinct clients connect to $R_1$ and $R_2$ respectively and issue
+two concurrent \C{remove $e$} operations. Later, another
+client connects to $R_2$ and issues an \C{insert $e$} operation. The
+effects of these operations are asynchronously applied at remote
+replicas as shown in the figure, resulting in the divergent states at
+$R_1$ and $R_2$.
+
+Note that, unlike the execution in Fig.~\ref{fig:crdt-execs-1}, the
+conflicting operations in Fig.~\ref{crdt-execs-2}, namely $R_1$'s
+\C{remove} and $R_2$'s \C{insert}, are \emph{not} causally related,
+hence their relative order is not determined by the sequential
+specification of the data type. Forcing a causal relationship between
+them requires synchronization between \C{insert}s and \C{remove}s,
+which is expensive in an asynchronous distributed setting. It
+therefore becomes inevitable to ascribe semantics to concurrent
+executions to restore convergence. This is done by imposing an
+\emph{arbitration order} among concurrent conflicting operations,
+which are otherwise unordered. For example, in
+Fig.~\ref{fig:crdt-execs-2}, we might let $R_2$'s \C{insert} override
+$R_1$'s \C{remove} considering that \C{insert} is re-inserting an
+element after a previous remove. Ordering concurrent removes ahead
+of inserts uniformly on all replicas leads to an implementation of
+\C{Set} RDT where concurrent (re-)insertions consistenty \emph{win}
+over removals. Such an \emph{add-wins} set is useful, for instance, to
+implement a shared shopping cart where two users can concurrently
+remove an item from the cart, but if one of them re-adds it then the
+item should be present in the final cart\footnote{This is in fact the
+semantics of Amazon's shopping cart~\cite{dynamo}}.
+
+Extending the \C{Set} implementation from Fig.~\ref{fig:cc-set} with
+\emph{add-wins} semantics is however not trivial. The suggested
+approach involves tracking element-wise causal dependencies between
+the \C{remove}s and \C{insert}s by maintaining a vector clock
+\emph{for each element} $e$ in the set~\cite{zawirski-thesis}. The
+vector clock of $e$ records the sequence number of the last \C{insert
+$e$} operation from each replica whose effect has been received and
+applied at the current replica. The \C{Insert} and \C{Remove} effects
+on $e$ will now be tagged with $e$'s vector clock. When an \C{Remove}
+effect on $e$ is received at a replica, it is applied only if the
+tagged vector clock is no less than $e$'s local vector clock, i.e.,
+only if the arriving \C{Remove} has seen (i.e., causally succeeds) at
+least those \C{insert $e$} operations the current replica is aware of.
+Otherwise the effect is simply a no-op. This strategy would result in
+convergent states despite the execution in Fig.~\ref{fig:crdt-execs-2}
+as $R_2$'s \C{remove} effectively becomes a no-op at $R_1$ due to
+there being at least one \C{insert} operation on $e$ that it hasn't
+seen. The \C{Set} interface extended with element-wise vector clocks
+is shown in Fig.~\ref{fig:rw-set}. The resultant set RDT is assumed to
+be correct albeit a formal proof of convergence could not be found in
+the literature. 
+
+The above exercise demonstrates the considerable ingenuity and effort
+involved in deriving a convergent RDT out of such simple data type as
+\C{Set}. Some of the effort can be mitigated by strengthening the
+underlying system model insofar as it doesn't affect the latency and
+availability of the application. For instance, a system that always
+delivers messages in the causal order would automatically preempt the
+execution in Fig.~\ref{fig:crdt-execs-1} without the need for
+additional intervention on behalf of the developer. This is a
+particularly attractive proposition considering that causal
+consistency can be ``bolted on'' an existing implementation of an
+eventually consistent system without weakening its
+guarantees~\cite{bolton}. Unfortunately, such strengthening of the
+system model would deliver no benefits to the developer if they still
+have to reason about fine-grained causal dependencies to guarantee
+convergence, such as in the case of Fig.~\ref{fig:crdt-execs-2}. As we
+observed earlier, the execution in Fig.~\ref{fig:crdt-execs-2} seems
+inevitable unless every pair of \C{insert} and \C{remove} operations
+are synchronized, which, regrettably, is not a practical option. The
+developer therefore seems to be stuck.
+
+Fortunately, there is a way out of this problem and the solution
+requires a switch in the perspective of replication from an
+operation-centric view characterized by explicit effects to a
+state-centric view characterized by explicit state merges. The
+motivation for this switch is the key observation that it is possible
+to induce an ordering over \emph{states} of replicas even as their
+operations and effects remain unordered, as long as such states are
+\emph{mergeable}. The ordering is enforced by synchronizing merges in
+the background while the replica-local execution progresses
+unhindered. Consequently, eventual convergence can be guaranteed
+\emph{without} impacting the user-perceived latency of the operations.
+Moreover, working with states instead of operations frees the latter
+from having to conform to algebraic laws such as commutativity.  Put
+together, this means that the clients of a replicated data type can
+perform any action allowed by the sequential version of the type and
+immediately see the results of their actions on the local replica
+while being safe in the knowledge that replica states will eventually
+converge.
+
+To demonstrate the aforementioned intuitions we reconsider the
+executions from Fig.~\ref{fig:crdt-execs}, this time in the
+state-centric replication model. The cornerstone of the state-centric
+model is a three-way \C{merge} function that merges concurrent
+versions of the state in presence of their (lowest) common ancestor
+version. In our running example, the state is a value of type
+\C{Set.t}, hence \C{Set.merge} function would have the type signature:
+\begin{center}
+\C{Set.merge} : \C{Set.t} $\rightarrow$ \C{Set.t} $\rightarrow$ \C{Set.t}
+$\rightarrow$ \C{Set.t}
+\end{center}
+The three arguments of \C{merge} correspond to the lowest common
+ancestor (LCA) version and the two concurrent versions that
+independently evolved from the ancestor version. The LCA is a causal
+ancestor of concurrent versions, hence causal consistency is built
+into the replication model. The result of set merge, intuitively, must
+contain the common elements in the two concurrent versions along with
+any newly added elements in either versions. Concretely:
+\begin{ocaml}
+let merge s s1 s2 = 
+              (s1 $\cap$ s2) $\cup$ (s1 - s) $\cup$ (s2 - s)
+\end{ocaml}
+Equipped with the above set merge function, we can now consider the
+equivalent execution of Fig.~\ref{fig:crdt-execs-1} in state-centric
+model. The execution is shown in Fig.~\ref{fig:mrdt-execs-1}. The
+initial version on all three replicas ($v_0$) is the singleton set
+$\{e\}$. Applying operations to replicas creates new versions, e.g.,
+$v_1$ on $R_3$. Changes can be propagated by merging versions, e.g.,
+version $v_2$ on $R_2$ is a result of merging $v_0$ and $v_1$ in
+presence of their LCA $v_0$\footnote{Versions $v_0$ and $v_1$ are not
+  concurrent as the former is an ancestor of the latter. Merging $v_1$
+  into $v_0$ is nonetheless possible as $v_1$ is ahead of $v_0$ in
+  causal order. In Git parlance this is a \emph{fast forward} merge.}.
+Likewise $v_4$ on $R_1$ is created by merging $v_3$ and $v_0$ in
+presence of their LCA $v_0$. By the end of the execution, versions $v_4$
+and $v_3$ at $R_1$ and $R_2$ (resp.) have witnessed the same set of
+operations, hence are in agreement.
+
+Convergence however is not an inherent virtue of the state-centric
+replication model. Fig.~\ref{fig:mrdt-exec-2} shows the state-centric
+analogue of the execution in Fig.~\ref{fig:crdt-exec-2}, which too
+diverges.

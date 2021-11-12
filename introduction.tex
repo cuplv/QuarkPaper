@@ -1,4 +1,5 @@
 \section{Introduction}
+\label{sec:intro}
 
 Large-scale web services and decentralized applications often rely on
 geo-distributed state replication to meet their latency and availability
@@ -115,11 +116,11 @@ consistency}, which is weaker than linearizability but is stronger than the
 default \emph{eventual consistency}. While causal consistency alone cannot
 guarantee convergence, it sufficiently constrains the distributed execution
 for the CRDT implementations to guarantee convergence. In this respect our
-  approach differs in the sense that (a). It identifies a novel set of
-  constraints on distributed execution that guarantee convergence of an
-  MRDT \emph{regardless} of its merge semantics, and (b). It localizes
-  those constraints spatially and temporally into the runtime such that
-  per-operation latency and system-wide availability remain unaffected.
+approach differs in the sense that (a). It identifies a novel set of
+constraints on distributed execution that guarantee the convergence of an
+MRDT \emph{regardless} of its merge semantics, and (b). It localizes those
+constraints spatially and temporally into the runtime such that
+per-operation latency and system-wide availability remain unaffected.
 Sec.~\ref{sec:semantics} explains our runtime in detail. 
 
 \paragraph{Contributions} The contributions of this paper are summarized
@@ -144,11 +145,9 @@ below:
 
   \item We realize an implementation of \quark as a light-weight shim layer
   on top of Scylla -- an off-the-shelf distributed key-value
-  store~\cite{scylla}. An evaluation over several mergeable replicated data
-  types (MRDTs) demonstrate that \quark has \emph{no} effect on the latency
-  and availability of the system. To demonstrate the trade-offs not
-  captured by latency and availability, we invent a new metric called
-  \emph{staleness} and show that our approach does affect it negatively, albeit
-  within the tolerable limits.
+  store~\cite{scylla}. We do a thorough evaluation with a
+    collaborative-editing benchmark to demonstrate that \quark has
+    \emph{no} effect on the latency and availability of the system, while
+    slightly increasing the time to convergence.
 \end{itemize}
 
