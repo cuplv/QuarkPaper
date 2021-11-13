@@ -156,13 +156,13 @@ $\rightarrow$ \C{Set.t}
 \end{center}
 The three arguments of \C{merge} correspond to the lowest common
 ancestor (LCA) version and the two concurrent versions that
-independently evolved from the ancestor version. The LCA is a causal
+independently evolved from the LCA version. The LCA is a causal
 ancestor of concurrent versions, hence causal consistency is built
 into the replication model. The result of set merge, intuitively, must
 contain the common elements in the two concurrent versions along with
 any newly added elements in either versions. Concretely:
 \begin{ocaml}
-let merge s s1 s2 = 
+  let merge s(*lca*) s1 s2 = 
               (s1 $\cap$ s2) $\cup$ (s1 - s) $\cup$ (s2 - s)
 \end{ocaml}
 Equipped with the above set merge function, we can now consider the
@@ -172,16 +172,101 @@ initial version on all three replicas ($v_0$) is the singleton set
 $\{e\}$. Applying operations to replicas creates new versions, e.g.,
 $v_1$ on $R_3$. Changes can be propagated by merging versions, e.g.,
 version $v_2$ on $R_2$ is a result of merging $v_0$ and $v_1$ in
-presence of their LCA $v_0$\footnote{Versions $v_0$ and $v_1$ are not
-  concurrent as the former is an ancestor of the latter. Merging $v_1$
-  into $v_0$ is nonetheless possible as $v_1$ is ahead of $v_0$ in
-  causal order. In Git parlance this is a \emph{fast forward} merge.}.
+presence of their lowest common ancestor (LCA) version
+$v_0$\footnote{Versions $v_0$ and $v_1$ are not concurrent as the
+  former is an ancestor of the latter. Merging $v_1$ into $v_0$ is
+  nonetheless possible as $v_1$ is ahead of $v_0$ in causal order. In
+  Git parlance this is a \emph{fast forward} merge.}.
 Likewise $v_4$ on $R_1$ is created by merging $v_3$ and $v_0$ in
-presence of their LCA $v_0$. By the end of the execution, versions $v_4$
-and $v_3$ at $R_1$ and $R_2$ (resp.) have witnessed the same set of
-operations, hence are in agreement.
+presence of their LCA $v_0$. By the end of the execution, versions
+$v_4$ and $v_3$ at $R_1$ and $R_2$ (resp.) have witnessed the same set
+of operations, hence are in agreement.
 
 Convergence however is not an inherent virtue of the state-centric
 replication model. Fig.~\ref{fig:mrdt-exec-2} shows the state-centric
-analogue of the execution in Fig.~\ref{fig:crdt-exec-2}, which too
-diverges.
+analogue of the execution in Fig.~\ref{fig:crdt-exec-2} which
+diverges. Here $R_1$ and $R_2$ start with version $v_0 \,=\, \{e\}$.
+$R_2$ performs a \C{remove} and and an \C{insert} making versions
+$v_1$ and $v_2$ respectively. Simultaneously, $R_1$ performs a
+\C{remove} to make $v_3$. Replica $R_1$ now obtains $R_2$'s changes by
+merging versions $V_1$ and $v_2$ to make new versions $v_4$ and $v_5$
+respectively. LCAs for these merges are $v_0$ and $v_1$. Concurrently,
+$R_2$ obtains $R_1$'s changes by merging $v_3$ with $v_2$ (LCA =
+$v_0$) to make $v_6$.  Now $R_1$ and $R_2$ have same set of changes
+yet their final versions differ.
+
+Note that the anamolous execution in Fig.~\ref{fig:mrdt-execs-2} could
+have been avoided had the merges between $R_1$ and $R_2$ been
+linearized. Fig.~\ref{fig:mrdt-execs-3} shows an execution that only
+slightly differs from the one in Fig.~\ref{fig:mrdt-execs-2}. The
+difference is that the merges in Fig.~\ref{fig:mrdt-execs-3} happen
+linearly: first $R_1$ is merged into $R_2$ (bringing $R_1$'s
+\C{remove}), then $R_2$ into $R_1$ (bringing $R_2$'s \C{remove}),
+followed again by $R_2$ into $R_1$ (bringing $R_2$'s \C{insert}). As a
+result of such linearization, the final versions on $R_1$ and $R_2$
+converge to the singleton set $\{e\}$. Note that there exist other
+linearizations of merges; for instance, $R_1 \,\rightarrow\, R_2$
+merge could be ordered between the two $R_2 \rightarrow R_1$ merges.
+However, all linearizations result in the same final state $\{e\}$.
+Another important point to note is that only the merges are
+linearized; not the entire execution. In Fig.~\ref{fig:mrdt-execs-3},
+both $R_1$ and $R_2$'s \C{remove}s remove the same element $e$, which
+is not possible in a linearized execution. Leaving the execution
+unconstrained is crucial to satisfy the limits imposed by the CAP
+theorem on a highly-available partition-tolerant distributed system.
+
+In the context of Fig.~\ref{fig:mrdt-execs-3}, it is quite clear what
+linearization of merges means and how to enforce it via
+synchronization (for e.g., wrapping each merge within a global lock).
+In general however, the semantics of merge linearization isn't as cut
+and dried. For instance, consider the execution in
+Fig.~\ref{fig:mrdt-execs-4}. The four replicas involved in the
+execution start with version $v_0 \,=\, \{e\}$. The replicas perform
+local operations as shown in the figure to make versions $v_1$ to
+$v_5$. Next they perform a series of merges to propagate local
+changes. The merges can be ordered in time as following: first $R_2
+\rightarrow R_1$, then $R_3 \rightarrow R_1$, then $R_2 \rightarrow
+R_4$, and finally $R_3 \rightarrow R_4$. Despite linearly ordered in
+time, the merges nonetheless result in divergent execution. The
+problem here is that, although merges are executed linearly, the
+execution graph does not reflect this linearity; merges of that end in
+$R_1$ in Fig.~\ref{fig:mrdt-execs-4} are effectively concurrent with
+those that end in $R_4$. This shows that simply synchronizing the
+execution of merges does not necessarily result in convergence.
+
+Our key insight to overcome this impasse is a \emph{well-formedness}
+condition on execution graphs that ensures convergence of final
+states. To understand well-formedness, let us contrast the bad
+executions in Figs.~\ref{fig:mrdt-execs-2} and~\ref{fig:mrdt-execs-4}
+against the good execution in Fig.~\ref{fig:mrdt-execs-3}. Observe
+that in Fig.~\ref{fig:mrdt-execs-2}, \emph{every} pair of concurrent
+versions on $R_1$ and $R_2$ have a unique lowest common ancestor
+(LCA). For instance, LCA of $(v_5,v_6)$ is $v_6$, $(v_5,v_4)$ is
+$v_3$, $(v_1,v_2)$ is $v_0$ and so on. By contrast in
+Fig.~\ref{fig:mrdt-execs-2}, versions $v_5$ and $v_6$ have two LCAs,
+namely $v_2$ and $v_3$. Both these versions are common ancestors of
+$v_5$ and $v_6$, and both are \emph{lowest} in the sense that there do
+not exist versions lower (in the execution graph) than $v_2$ and $v_3$
+that are also common ancestors of $v_5$ and $v_6$. Likewise in
+Fig.~\ref{fig:mrdt-execs-4}, versions $v_7$ and $v_9$ have two LCAs --
+$v_2$ and $v_4$. Multiple LCAs is an indication that there exist
+merges prior in the execution graph that are effectively concurrent.
+Considering that our approach to convergence in state-centric model
+crucially relies on linearity of merges, presence of multiple LCAs
+opens up the possibility of divergence. We therefore define
+well-formed execution graphs as those where LCAs for every pair of
+concurrent versions is unique. As we prove in
+Sec.~\ref{sec:formalization}, enforcing this structural
+well-formedness condition indeed guarantees the convergence of
+distributed executions. In Sec.~\ref{fig:implementation}, we describe
+a distributed runtime called \quark whose primary purpose is to
+enforce the well-formedness condition on distributed executions. The
+runtime makes it possible to automatically promote ordinary data types
+equipped with a merge function to convergent replicated data types.
+Thus, extending the \C{Set} interface of Fig.~\ref{fig:ocaml-set} with
+the two-line \C{Set.merge} function shown above is sufficient to
+obtain a convergent replicated set data type.
+
+The following section formalizes the aforementioned intuitions with
+help of an abstract machine that generates only the well-formed
+executions. 
