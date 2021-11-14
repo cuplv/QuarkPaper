@@ -27,73 +27,80 @@ be implemented using Commutative Replicated Data Types
 application such as YouTube can be implemented as a Counter CRDT that
 supports commutative increments.
 
-In general, however, commutativity is not a common occurrence among data
-types. Most common data type definitions come with at least a pair of
-operations that do not commute. For instance an \C{insert} and a \C{remove}
-operations on a set do not commute if both are for the same element.
-Likewise two \C{insert} operations for the same position in a list do not
-commute. Such non-commutative operations translate to conflicting updates
-in a distributed setting. For instance, concurrent \C{insert $k$} and
-\C{remove $k$} operations for an element $k$ in a replicated set are in
-conflict, and it is not clear what their cumulative result should
-be\footnote{Here, the \C{insert} $i$ is assumed to have witnessed a
-  \C{remove} $r'$ that is distinct from the earlier \C{remove} $r$. Both
-  $i$ and $r'$ are concurrent to $r$, hence their effects are not visible
-  during $r$'s execution.}. To use such a non-commutative data type in a
-replicated setting, creative re-engineering of its internal representation
-and algorithms is needed to turn it into a bonafide CRDT with a sensible
-distributed semantics. In the case of set data type, that could involve
-changing the internal representation to maintain two sets -- a set
-containing the current elements and a \emph{tombstone} set that contains
-every element that has ever been deleted from the set. A \C{remove
-$k$} operation removes $k$ from the element set and adds it to the
-tombstone set, and an \C{insert $k$} operation adds $k$ to the element set
-only if it is not present in the tombstone set (i.e., only if $k$ was not
-previously deleted from the set). This results in a CRDT set called
-\emph{two-phase set} where an element once removed cannot be re-added. 
-
-A more complex re-engineering of the set data type could result in a set
-CRDT with a different (and arguably more useful) semantics.
-Sec.~\ref{sec:motivation} describes a \emph{remove-wins} CRDT set, which
-allows elements to be readded, but which prioritizes \C{remove}s over
-concurrent \C{insert}s. This transformation requires vector
-clocks~\cite{vectorclock} to keep track of casual ordering among
-\C{insert}s and \C{remove}s. In fact most CRDTs have carefully-crafted
-implementations involving non-trivial technical devices like vector
-clocks. For instance, Replicated Growable Array (RGA) -- a CRDT for
-collaborative editing~\cite{rga}, makes use of a variant of Lamport
-timestamps~\cite{lamportts}; TreeDoc, another collaborative-editing CRDT,
-makes use of \emph{dense linear orders}~\cite{treedoc}; and JSON CRDT -- a
-CRDT variant of the JSON storage format, implements transactional semantics
-and causal dependency sets~\cite{jsoncrdt}. Such complexity makes it very
-hard to reason about basic correctness properties of CRDTs, such as
-convergence (formally known as \emph{strong eventual
-consistency}~\cite{crdts}).  Indeed, formal verification of strong eventual
-consistency for a subset of the aforementioned CRDTs required considerable
-effort on behalf of multiple authors who are experts in the
-field~\cite{kleppmann2017}. The need for such advanced implementation and
-reasoning techniques makes the development of new CRDTs a research exercise
-to be undertaken only by experts.
+In general, however, commutativity is not a common occurrence among
+data types. Most common data type definitions come with at least a
+pair of operations that do not commute. For instance an \C{add} and a
+\C{remove} operations on a set do not commute if both are for the same
+element.  Likewise two \C{insert} operations for the same position in
+a list do not commute. Such non-commutative operations translate to
+conflicting updates in a distributed setting, whose cumulative result
+cannot be determined by the sequential specification of the data type
+alone. To use a non-commutative data type in a replicated setting,
+creative re-engineering of its internal representation and algorithms
+is needed to turn it into a bonafide CRDT with a sensible distributed
+semantics.
+% In the case of set data type, that could involve changing the internal
+% representation to maintain two sets -- a set containing the current
+% elements and a \emph{tombstone} set that contains every element that
+% has ever been deleted from the set. A \C{remove $k$} operation removes
+% $k$ from the element set and adds it to the tombstone set, and an
+% \C{insert $k$} operation adds $k$ to the element set only if it is not
+% present in the tombstone set (i.e., only if $k$ was not previously
+% deleted from the set). This results in a CRDT set called
+% \emph{two-phase set} where an element once removed cannot be re-added. 
+% A more complex re-engineering of the set data type could result in a set
+% CRDT with a different (and arguably more useful) semantics.
+% Sec.~\ref{sec:motivation} describes a \emph{remove-wins} CRDT set, which
+% allows elements to be readded, but which prioritizes \C{remove}s over
+% concurrent \C{insert}s. This transformation requires vector
+% clocks~\cite{vectorclock} to keep track of casual ordering among
+% \C{insert}s and \C{remove}s.
+Indeed, most CRDTs have such carefully-crafted implementations that
+rely on non-trivial technical devices to keep track of causal
+dependencies and avoid or resolve conflicts. For instance, various
+CRDT variants of the set abstract data type rely on \emph{vector
+clocks} to identify conflicting \C{add}s and
+\C{remove}s~\cite{zawirski-thesis, zhang}, Replicated Growable Array
+(RGA) -- a CRDT for collaborative editing~\cite{rga} and JSON CRDT --
+a CRDT variant of the JSON storage format, both use \emph{Lamport
+timestamps}~\cite{rga, json-crdt}; and TreeDoc, another CRDT for
+collaborative editing, makes use of \emph{dense linear
+orders}~\cite{treedoc}. Such advanced implementations makes it hard to
+reason about basic correctness properties of CRDTs, such as
+convergence. Indeed, formal verification of \emph{strong eventual
+consistency} (i.e., eventual convergence) for few of the
+aforementioned CRDTs required considerable effort on behalf of
+multiple authors who are experts in the field~\cite{kleppmann2017}.
+The extraordinary effort and the expertise required to build CRDTs is
+a deterrent towards using type-safe abstractions with strong
+guarantees in distributed applications. To overcome this deterrent,
+there is a need for an alternative approach that lets developers reuse
+their sequential abstractions in a distributed setting with little to
+no additional overhead of reasoning about their correctness properties
+such as convergence.
 
 % hinders the widespread adoption of replicated data
 % types in software development.
-In this paper we propose an alternative approach to replicated data types
-that addresses the problems discussed above. Our approach differs from the
-CRDT approach in two fundamental ways. Firstly, we adopt a state-centric
-model of replication with \emph{mergeability} of states as the defining
-characteristic in contrast to CRDTs' operation-centric model characterized
-by commutativity. Unlike commutativity, mergeability does not require a
-full-scale re-engineering of the data type definition. Instead,
-a data type only has to define a merge semantics in form a \C{merge}
-function to reconcile concurrent versions of the type in presence of their
-common ancestor version. Notably, \C{merge} function is left completely
-unconstrained even as convergence is guaranteed on the corresponding
-\emph{mergeable replicated data type} (MRDT)~\cite{mrdt}. Such strong
-guarantees are possible due to the simplicity of state-based reasoning
-relative to the operation- or trace-based one. Note that state-centric
-model of replication has also been adapted to CRDTs, but such state-based
-CRDTs require the replicated state to be organized as a lattice to
-guarantee convergence -- a restriction we eliminate in our setting. 
+In this paper we propose such an alternative approach to convergent
+replicated data types.  
+% The key distinguishing characteristic of
+Our approach differs from the CRDT approach in
+two fundamental ways. Firstly, we adopt a state-centric model of
+replication with \emph{mergeability} of states as the defining
+characteristic in contrast to CRDTs' operation-centric model
+characterized by commutativity. Unlike commutativity, mergeability
+does not require a full-scale re-engineering of the data type
+definition. Instead, a data type only has to define a merge semantics
+in form a \C{merge} function to reconcile concurrent versions of the
+type in presence of their common ancestor version. Notably, \C{merge}
+function is left completely unconstrained even as convergence is
+guaranteed on the corresponding \emph{mergeable replicated data type}
+(MRDT)~\cite{mrdt}. Such strong guarantees are possible due to the
+simplicity of state-based reasoning relative to the operation- or
+trace-based one. Note that state-centric model of replication has also
+been adapted to CRDTs, but such state-based CRDTs require the
+replicated state to be organized as a lattice to guarantee convergence
+-- a restriction we eliminate in our setting. 
 
 The second distinguishing aspect of our approach is the utilization of a
 distributed runtime that orchestrates \emph{well-formed} distributed
