@@ -91,11 +91,11 @@ module Set: sig
   (* Set RDT Effects *)
   type eff = Add of elt * v_clock 
            | Remove of elt * v_clock
-  type buf = eff list (* pending effects *)
   (* This replica's vector clock *)
   val local_clock: v_clock 
   val add: elt -> eff
   val remove: elt -> eff
+  val buf: eff list (* pending effects *)
   (* Apply an effect to the local state *)
   val apply_eff: eff -> unit
 end

@@ -1,0 +1,133 @@
+\begin{figure*}[t]
+\begin{smathpar}
+  \begin{array}{c}
+    v\in\texttt{Versions/Vertices}\spc
+    b\in\texttt{Branches}\spc
+    c\in\texttt{CommitIds}\spc
+    n\in\texttt{Values}\spc
+    \cedge,\fedge,\medge \in \texttt{Edges}\spc
+    G\in(\texttt{Vertices},\texttt{Edges})\\
+    N : \texttt{Version} \rightarrow \texttt{Value}\spc
+    C : \texttt{Version} \rightarrow \Pow{\texttt{CommitId}} \spc
+    H : \texttt{Branch} \rightarrow \texttt{Version} \spc
+    L : \texttt{Branch}\times\texttt{Branch} \rightarrow
+    \texttt{Version}\\
+  \end{array}
+\end{smathpar}
+%
+\fbox {\( (G,N,C,H,L) \stepsto (G',N',C',H',L')\)} 
+%
+\bigskip
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b\in dom(H)\spc
+  v\not\in V\spc
+  c\not\in codom(C)
+}
+{
+  ((V,E),N,C,H,L) \stepsto (V \cup \{v\},\, E\cup\{H(b) \cedge v\},\,
+  N[v \mapsto n],\,C[v \mapsto \{c\} \cup C(H(b))],\, H[b \mapsto v], L)
+}
+\spc
+  [\rulelabel{Commit}]
+\end{array}
+\end{smathpar}
+%
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b\in dom(H)\spc
+  b'\not\in dom(H) \spc
+  v\not\in V\spc
+}
+{
+  \hspace*{-0.3in}
+  ((V,E),N,C,H,L) \stepsto (V \cup \{v\},\, E\cup\{H(b) \fedge v\},\,
+  N[v \mapsto N(H(b))],\, C[v \mapsto C(H(b))],\\
+  \hspace*{2in} 
+  H[b' \mapsto v],\,
+  L[(b',b) \mapsto H(b)]
+                 [\{(b',b'') \mapsto L(b,b'') \,|\, b'' \neq b\}])
+}
+\spc
+[\rulelabel{Fork}]
+\end{array}
+\end{smathpar}
+%
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b,b'\in dom(H)\spc
+  C(H(b)) \supset C(L(b,b'))\spc
+  C(H(b')) \supset C(L(b,b'))\\
+% \neg(H(b') \reaches H(b))\spc
+% \neg(H(b) \reaches H(b'))\\
+  \forall (b''\in dom(H)).~L(b,b'') \reaches L(b',b'') 
+    \disj L(b',b'') \reaches L(b,b'') \\
+  n = {\sf merge}(N(L(b,b')),\, N(H(b)),\, N(H(b'))) \spc
+  v \not\in V
+}
+{
+  \hspace*{-1.5in}
+  ((V,E),N,C,H,L) \stepsto (V \cup \{v\},\, E\cup\{H(b) \medge v, 
+                                                 H(b') \medge v\},\\
+    \hspace*{1in}
+    N[v \mapsto n],\,
+    C[v \mapsto C(H(b)) \cup C(H(b'))],\, H[b \mapsto v],\\
+    \hspace*{1.8in}
+    L[(b,b') \mapsto H(b') ]
+     [\{(b,b'') \mapsto L(b',b'') \,|\, L(b,b'') \reaches L(b',b'')\}])
+}
+\spc
+[\rulelabel{Merge}]
+\end{array}
+\end{smathpar}
+%
+
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b,b'\in dom(H)\spc
+  C(H(b)) = C(L(b,b'))\spc
+  C(H(b')) \supset C(L(b,b'))\\
+% \neg(H(b') \reaches H(b))\spc
+% H(b) \reaches H(b')\\
+  \forall (b''\in dom(H)).~L(b,b'') \reaches L(b',b'') 
+    \disj L(b',b'') \reaches L(b,b'') \spc
+  v \not\in V
+}
+{
+  \hspace*{-1.5in}
+  ((V,E),N,C,H,L) \stepsto (V \cup \{v\},\, E\cup\{H(b) \medge v, 
+                                                 H(b') \medge v\},\\
+    \hspace*{1in}
+    N[v \mapsto N(H(b'))],\,
+    C[v \mapsto C(H(b'))],\,
+    H[b \mapsto v],\\
+    \hspace*{1.8in}
+    L[(b,b') \mapsto H(b') ]
+     [\{(b,b'') \mapsto L(b',b'') \,|\, L(b,b'') \reaches L(b',b'')\}])
+}
+\spc
+[\rulelabel{FastFwd}]
+\end{array}
+\end{smathpar}
+%
+
+\caption{The semantics of \quark abstract machine inspired by the Git
+version control system}
+\label{fig:git-semantics}
+\end{figure*}
