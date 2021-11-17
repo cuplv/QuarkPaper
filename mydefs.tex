@@ -140,9 +140,7 @@ morekeywords={oper, txn, invariant, module, begin, match, when, @@deriving, not,
 \newcommand{\csess}[2]{\C{ssn}\langle #1 \rangle \{#2\}}
 \newcommand{\catomic}[1]{\C{ATOMIC}\{#1\}}
 \newcommand{\stepsto}{\longrightarrow}
-\newcommand{\rstepsto}{\longrightarrow_{R}}
 \newcommand{\stepssto}[1]{\longrightarrow^{#1}_{R}}
-\newcommand{\rstepssto}[1]{\longrightarrow^{#1}_{R}}
 \newcommand{\xstepsto}[1]{\longrightarrow_{#1}}
 \newcommand{\xstepssto}[2]{\longrightarrow^{#1}_{#2}}
 \newcommand{\tstepsto}{\longrightarrow}
@@ -211,36 +209,8 @@ morekeywords={oper, txn, invariant, module, begin, match, when, @@deriving, not,
 \newcommand{\txnbox}[1]{\lbrack #1 \rbrack}
 \newcommand{\Prop}{\mathbb{P}}
 \newcommand{\Pow}[1]{\mathcal{P}\left(#1\right)}
-\newcommand{\condexp}[3]{{#1?\,#2:\,#3}}
-\newcommand{\ite}[3]{\C{IF}\;#1\;\C{THEN}\;#2\;\C{ELSE}\;#3}
-\newcommand{\lete}[3]{\C{LET}\;#1=#2\;\C{IN}\;#3}
-\newcommand{\foreache}[2]{\texttt{FOREACH}\;#1\;\texttt{DO}\;#2}
-\newcommand{\inserte}[1]{\texttt{INSERT}\;t\;#1}
-\newcommand{\selecte}[1]{\texttt{SELECT}\;t\;#1}
-\newcommand{\deletee}[1]{\texttt{DELETE}\;t\;#1}
-\newcommand{\updatee}[2]{\texttt{UPDATE}\;t\;#1\;#2}
-\newcommand{\rollback}[0]{\texttt{ROLLBACK}}
-\newcommand{\mape}[2]{{\texttt{MAP}\;(#1)\;#2}}
-\newcommand{\folde}[3]{{\texttt{FOLD}\;(#1)\;#2\;#3}}
-\newcommand{\lambdae}[2]{\lambda #1.\,#2}
-\newcommand{\Rmem}{R_{mem}}
-\newcommand{\Rob}{R_{ob}}
-\newcommand{\Robs}{R_{ob}}
-\newcommand{\Roas}{R_{oa}}
-\newcommand{\Rio}{R_{io}}
-\newcommand{\Rans}{R_{ans}}
-\newcommand{\Rfst}{R_{fst}}
-\newcommand{\Rsnd}{R_{snd}}
-\newcommand{\Rpair}{R_{pair}}
-\newcommand{\Rk}{R_{k}}
-\newcommand{\Rkv}{R_{kv}}
-\newcommand{\Rto}{R_{to}}
 \renewcommand{\bar}[1]{\overline{#1}}
-\newcommand{\Rbar}{\bar{R}}
-\newcommand{\Tbar}{\bar{T}}
 \renewcommand{\merge}{\diamond}
-\newcommand{\rmerge}{\blacklozenge}
-\newcommand{\gammaord}{\gamma_{ord}}
 \newcommand{\quark}{{\sc Quark}\xspace}
 \newcommand{\hlabel}[1]{\begin{hypothesis}\label{#1}\end{hypothesis}\ref{#1}}
 \newcommand{\A}{\mathcal{A}}
@@ -253,3 +223,4 @@ morekeywords={oper, txn, invariant, module, begin, match, when, @@deriving, not,
 \newcommand{\fmedges}{\xrightarrow{f,m}\!\!^{*}}
 \newcommand{\reaches}{\rightarrow^{*}}
 \newcommand{\reachable}{\leftrightarrow^{*}}
+\newcommand{\rstepsto}[1]{\longrightarrow_{#1}}

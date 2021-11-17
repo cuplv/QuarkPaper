@@ -1,0 +1,148 @@
+\begin{figure*}[t]
+\begin{smathpar}
+  \begin{array}{c}
+    i,j\in\texttt{ReplicaIds}\spc
+    b_i,b_j\in\texttt{Branches}\spc
+    t\in\texttt{VersionVectors}\spc
+    n\in\texttt{Values}\spc
+%   \cedge,\fedge,\medge \in \texttt{Edges}\spc
+%   G\in(\texttt{Vertices},\texttt{Edges})\\
+    N : \texttt{VersionVector} \rightarrow \texttt{Value}\\
+%   C : \texttt{Version} \rightarrow \Pow{\texttt{CommitId}} \spc
+%   R : \texttt{ReplicaId} \rightarrow \texttt{Branch} \spc
+    H : \texttt{ReplicaId} \rightarrow \texttt{Branch} \rightarrow \texttt{VersionVector} \spc
+%   L : \texttt{Branch}\times\texttt{Branch} \rightarrow \texttt{Version}\\
+    B : \texttt{ReplicaId} \rightarrow (\texttt{Branch} \times \mathbb{N}) \rightarrow \texttt{VersionVector} \spc
+  \end{array}
+\end{smathpar}
+%
+  \fbox {\( (B,N,H) \rstepsto{i} (B',N',H')\)} 
+%
+\bigskip
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b_i\in dom(H_i)\spc
+  t = H_i(b_i)\spc
+  t' = t[b_i \mapsto t(b_i) + 1]\spc
+}
+{
+  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],\,
+  N[t' \mapsto n],\, H_i[b_i \mapsto t'])
+}
+\spc
+  [\rulelabel{Commit}]
+\end{array}
+\end{smathpar}
+%
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b_i\in dom(H)\spc
+  b_j\not\in dom(H) \spc
+  t = H_i(b_i)\spc
+  t' = t[b_j \mapsto 1]
+}
+{
+  (B,N,H) \rstepsto{i} (B_{\tuplee{i,j}}[(b_j,1) \mapsto t'],\, N[t' \mapsto N(t)],\,
+        H_{\tuplee{i,j}}[b_j \mapsto t'])
+}
+\spc
+[\rulelabel{Fork}]
+\end{array}
+\end{smathpar}
+%
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b_i,b_j\in dom(H_i)\spc
+  \forall k.~H_i(b_k) = H_k(b_k)\\
+  t_i = H_i(b_i) \spc
+  t_j = H_i(b_j)\spc
+  t_l = t_i \sqcap t_j\spc
+  t_l < t_i\spc
+  t_l < t_j\spc
+  t' = t_j \sqcup t_i[b_i \mapsto t_i(b_i)+1]\\
+  \forall (b\in dom(H)).~
+    (t_i \sqcap H_i(b)) \lesseqgtr (t_j \sqcap H_i(b))\spc
+  n = {\sf merge}(N(t_l),\, N(H_i(b_i)),\, N(H_i(b_j))) 
+}
+{
+  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],
+            N[t' \mapsto n],\, H_i[b_i \mapsto t'])
+}
+\spc
+[\rulelabel{Merge}]
+\end{array}
+\end{smathpar}
+%
+
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b_i,b_j\in dom(H_i)\spc
+  \forall k.~H_i(b_k) = H_k(b_k)\\
+  t_i = H_i(b_i) \spc
+  t_j = H_i(b_j)\spc
+  t_i < t_j \spc
+  t' = t_j[b_i \mapsto t_i(b_i)+1]\\
+  \forall (b\in dom(H)).~
+    (t_i \sqcap H_i(b)) \lesseqgtr (t_j \sqcap H_i(b))\spc
+  %
+% \neg(H(b') \reaches H(b))\spc
+% H(b) \reaches H(b')\\
+}
+{
+  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],
+            N[t' \mapsto N(t_j)],\, H_i[b_i \mapsto t'])
+}
+\spc
+[\rulelabel{FastFwd}]
+\end{array}
+\end{smathpar}
+%
+
+
+
+%
+\begin{smathpar}
+\begin{array}{c}
+\RULE
+{
+  b_k\in dom(H_i)\spc
+  b_k \in dom(H_j)\spc
+  t = H_i(b_k) \spc
+  t' = H_j(b_k)\spc
+  t' > t
+  %
+% \neg(H(b') \reaches H(b))\spc
+% H(b) \reaches H(b')\\
+}
+{
+  (B,N,H) \rstepsto{i} (B_i[(b_k,t(b_k)+n) \mapsto B_j(b_k,t(b_k)+n)
+                          \,|\, n \in \{1,\ldots,t'(b_k) - t(b_k)\}],
+            N,\, H_i[b_k \mapsto t'])
+}
+\spc
+[\rulelabel{Sync}]
+\end{array}
+\end{smathpar}
+%
+
+
+
+\caption{The semantics of \quark distributed machine}
+\label{fig:quark-semantics}
+\end{figure*}
