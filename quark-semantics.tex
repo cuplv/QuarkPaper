@@ -65,15 +65,15 @@
 \RULE
 {
   b_i,b_j\in dom(H_i)\spc
-  \forall k.~H_i(b_k) = H_k(b_k)\\
+  \forall (k\in dom(H)).~b_k \in dom(H_i) \conj H_i(b_k) = H_k(b_k)\\
   t_i = H_i(b_i) \spc
   t_j = H_i(b_j)\spc
   t_l = t_i \sqcap t_j\spc
   t_l < t_i\spc
   t_l < t_j\spc
   t' = t_j \sqcup t_i[b_i \mapsto t_i(b_i)+1]\\
-  \forall (b\in dom(H)).~
-    (t_i \sqcap H_i(b)) \lesseqgtr (t_j \sqcap H_i(b))\spc
+  \forall (k\in dom(H)).~
+    (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))\spc
   n = {\sf merge}(N(t_l),\, N(H_i(b_i)),\, N(H_i(b_j))) 
 }
 {
@@ -93,13 +93,13 @@
 \RULE
 {
   b_i,b_j\in dom(H_i)\spc
-  \forall k.~H_i(b_k) = H_k(b_k)\\
+  \forall (k\in dom(H)).~b_k \in dom(H_i) \conj H_i(b_k) = H_k(b_k)\\
   t_i = H_i(b_i) \spc
   t_j = H_i(b_j)\spc
   t_i < t_j \spc
   t' = t_j[b_i \mapsto t_i(b_i)+1]\\
-  \forall (b\in dom(H)).~
-    (t_i \sqcap H_i(b)) \lesseqgtr (t_j \sqcap H_i(b))\spc
+  \forall (k\in dom(H)).~
+    (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))\spc
   %
 % \neg(H(b') \reaches H(b))\spc
 % H(b) \reaches H(b')\\
