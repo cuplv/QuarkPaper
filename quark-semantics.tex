@@ -16,9 +16,9 @@
   \end{array}
 \end{smathpar}
 %
-  \fbox {\( (B,N,H) \rstepsto{i} (B',N',H')\)} 
+  \fbox {\( (B,N,H) \qstepsto (B',N',H')\)} 
 %
-\bigskip
+%\bigskip
 
 %
 \begin{smathpar}
@@ -30,7 +30,7 @@
   t' = t[b_i \mapsto t(b_i) + 1]\spc
 }
 {
-  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],\,
+  (B,N,H) \qstepsto (B_i[(b_i,t'(b_i)) \mapsto t'],\,
   N[t' \mapsto n],\, H_i[b_i \mapsto t'])
 }
 \spc
@@ -50,8 +50,8 @@
   t' = t[b_j \mapsto 1]
 }
 {
-  (B,N,H) \rstepsto{i} (B_{\tuplee{i,j}}[(b_j,1) \mapsto t'],\, N[t' \mapsto N(t)],\,
-        H_{\tuplee{i,j}}[b_j \mapsto t'])
+  (B,N,H) \qstepsto (B_j[(b_j,1) \mapsto t'],\, N[t' \mapsto N(t)],\,
+        H_j[b_j \mapsto t'])
 }
 \spc
 [\rulelabel{Fork}]
@@ -77,7 +77,7 @@
   n = {\sf merge}(N(t_l),\, N(H_i(b_i)),\, N(H_i(b_j))) 
 }
 {
-  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],
+  (B,N,H) \qstepsto (B_i[(b_i,t'(b_i)) \mapsto t'],
             N[t' \mapsto n],\, H_i[b_i \mapsto t'])
 }
 \spc
@@ -97,15 +97,15 @@
   t_i = H_i(b_i) \spc
   t_j = H_i(b_j)\spc
   t_i < t_j \spc
-  t' = t_j[b_i \mapsto t_i(b_i)+1]\\
+  t' = t_j[b_i \mapsto t_i(b_i)+1]\spc
   \forall (k\in dom(H)).~
-    (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))\spc
+    (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))
   %
 % \neg(H(b') \reaches H(b))\spc
 % H(b) \reaches H(b')\\
 }
 {
-  (B,N,H) \rstepsto{i} (B_i[(b_i,t'(b_i)) \mapsto t'],
+  (B,N,H) \qstepsto (B_i[(b_i,t'(b_i)) \mapsto t'],
             N[t' \mapsto N(t_j)],\, H_i[b_i \mapsto t'])
 }
 \spc
@@ -131,7 +131,7 @@
 % H(b) \reaches H(b')\\
 }
 {
-  (B,N,H) \rstepsto{i} (B_i[(b_k,t(b_k)+n) \mapsto B_j(b_k,t(b_k)+n)
+  (B,N,H) \qstepsto (B_i[(b_k,t(b_k)+n) \mapsto B_j(b_k,t(b_k)+n)
                           \,|\, n \in \{1,\ldots,t'(b_k) - t(b_k)\}],
             N,\, H_i[b_k \mapsto t'])
 }

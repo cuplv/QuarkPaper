@@ -223,4 +223,11 @@ morekeywords={oper, txn, invariant, module, begin, match, when, @@deriving, not,
 \newcommand{\fmedges}{\xrightarrow{f,m}\!\!^{*}}
 \newcommand{\reaches}{\rightarrow^{*}}
 \newcommand{\reachable}{\leftrightarrow^{*}}
-\newcommand{\rstepsto}[1]{\longrightarrow_{#1}}
+
+% Low-level reduction relation
+\newcommand{\rightarrowdbl}{\rightarrow\mathrel{\mkern-14mu}\rightarrow}
+
+\newcommand{\xrightarrowdbl}[2][]{%
+  \xrightarrow[#1]{#2}\mathrel{\mkern-14mu}\rightarrow
+}
+\newcommand{\qstepsto}{\xrightarrowdbl{\spc}}

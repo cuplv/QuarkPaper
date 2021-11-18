@@ -2,3 +2,149 @@
 \label{sec:concrete-sem}
 
 \input{quark-semantics}
+
+The \quark abstract machine of the previous section deliberately
+ignores system-level concerns to focus on the semantics of
+version-controlled state replication. In this section we present the
+\quark \emph{distributed} machine that addresses the key system-level
+concerns and provides a blueprint for a practical version-controlled
+replicated state machine. We first reify the the one-to-one
+correspondence between replicas and branches we assumed informally in
+the previous section. This requires us to relax the assumption of the
+state $\Delta$ being shared synchronously across all replicas. Next we
+present an efficient method to track the version history with help
+of vector clocks. Finally, we outline an algorithm for garbage
+collecting older versions so that the version history need not grow
+unboundedly.
+
+Fig.~\ref{fig:quark-semantics} shows the operational semantics of the
+distributed machine. The key difference from the abstract semantics of
+Fig.~\ref{fig:git-semantics} is the presence of $\texttt{ReplicaId}$
+indexing the components of the system state. We thus admit the
+possibility of different replicas having different conceptions of the
+state. Another major difference is the use of version
+vectors~\cite{vectorclock} as identifiers and placeholders for
+versions. A version vector of a version $v$ records the sequence
+number of the last version from each branch that causally precedes $v$
+(as per Def.~\ref{def:ancestor}).  Concretely, version vector is a map
+from branches to natural numbers:
+\begin{center}
+  $\texttt{VersionVector}$ = $\texttt{Branch} \rightarrow \mathbb{N}$
+\end{center}
+
+The state of the distributed machine is the triple $\delta = (B,N,H)$.
+Components $B$ and $H$ are indexed by $\texttt{ReplicaId}$ to let us
+denote their replica-local copies. For instance, replica $i$'s copy of
+the \emph{head map} $H$ is given by $H\;i$, which we abbreviate to
+$H_i$ for notational convenience. Like $H$ in
+Fig.~\ref{fig:git-semantics}, $H_i$ maps each branch to the version
+vector of its head. Note that two replicas may be out of sync w.r.t
+the information in $H$ and $B$.  For instance, $H_i(b)$ may not be
+equal to $H_j(b)$ if replicas $i$ and $j$ are out of sync. On a
+replica $i$, \emph{branch map} $B_i$ gives the version vector
+corresponding to a particular sequence number on a branch. For
+instance, the version vector of the first version on branch $b$ is
+given by $B_i(b,1)$ on replica $i$. The value map $N$ maps version
+vectors to their values. We assume a single copy of $N$ to simplify
+the presentation. Generalizing Fig.~\ref{fig:quark-semantics} to allow
+for replica-local copies of $N$ is straightforward.
+
+Conspicuous by its absence in Fig.~\ref{fig:quark-semantics} is the
+LCA map $L$, which we previously used to track the LCA version for
+every pair of branches. The use of version vectors, coupled with the
+unique LCA guarantee, obviates the need for an LCA map.  We can
+instead identify the LCA of a pair of versions $v_1$ and $v_2$ by
+computing the \emph{greatest lower bound} (GLB) of their version
+vectors $t_1$ and $t_2$. Concretely:
+\begin{center}
+  $t_l \,=\, t_1 \sqcap t_2$
+\end{center}
+Where $t_l$ is the version vector of the LCA and $\sqcap$ is the GLB
+operator. Conversely, the version vector indentifying the result of a
+merge can be computed as the \emph{least upper bound} (LUB) of the two
+version vectors involved in the merge. Concretely:
+\begin{center}
+  $t_m \,=\, t_1 \sqcup t_2$
+\end{center}
+Where $t_1$ and $t_2$, and $t_m$ are the version vectors of the
+merging versions and the result of the merge, respectively. For
+technical reasons, however, we increment the component of $t_m$
+corresponding to the current branch $b$ to signify that this is a new
+version on $b$. So the actual version vector of the merge is $t_m' =
+t_m[b \mapsto t_m(b)+1]$. The GLB and LUB operations on version
+vectors are standard~\cite{vectorclock} -- GLB is computed by taking
+the component-wise minumum, and LUB by taking their maximum. The
+comparison of version vectors is also standard -- $t_1 < t_2$ iff
+$\forall b.~t_1(b) < t_2(b)$. Clearly, not all version vectors are
+comparable. We write $t_1 \lesseqgtr t_2$ if vectors $t_1$ and $t_2$
+are comparable.
+
+\paragraph{Notation and Conventions} We enforce a one-to-one mapping
+between replicas and branches by adopting the convention that branch
+$b_i$ always corresponds to replica $i$. Concretely this means that
+replica $i$ only ever creates new versions on branch $b_i$. Also,
+replica $i$ can only update its local copies of $H$ and $B$, i.e.,
+$H_i$ and $B_i$. For e.g., $H_i[b_i \mapsto t]$ updates the head of
+branch $b_i$ to $t$ on replica $i$.  Since $H_i$ is simply an
+abbreviation of $H\;i$ in the formalism, $H_i[b_i \mapsto t]$ actually
+expands to $H_i[i \mapsto b_i \mapsto t]$. We exploit this notation in
+Fig.~\ref{fig:quark-semantics}. 
+% When two replicas, $i$ and $j$, are involved in an update, e.g.,
+% \rulelabel{Fork}, we write $H_{\tuplee{i,j}}[b_j \mapsto t]$ to mean
+% $H[i \mapsto b_j \mapsto t][j \mapsto b_j \mapsto t]$.
+
+\paragraph{Rules} The transition relation $\qstepsto$ of the \quark
+distributed machine is defined in Fig.~\ref{fig:quark-semantics}.
+There is one rule corresponding to every rule in
+Fig.~\ref{fig:git-semantics} (abstract semantics). \rulelabel{Commit}
+describes replica $i$ committing a new version on the branch $b_i$
+with the given value $n$.  The vector $t'$ for the new version is
+obtained from that of the previous version $t$ by incrementing the
+component $b_i$. The sequence number of the new version on $b_i$ is
+$t'(b_i)$ and the branch map $B_i$ is updated to reflect that. Note
+that for all $j \neq i$, $H_j$ and $B_j$ remain unchanged indicating
+that other replicas are not (yet) aware of this commit.
+%
+\rulelabel{Fork} forks off a new branch $b_j$ from $b_i$. A new
+replica $j$ is assumed to take over $b_j$. The version vector $t'$ of
+the branch head now has a new component $b_j$ mapped to $1$ to denote
+this is the first version on $b_j$. Map $B_j$ is updated accordingly.
+Value $N(t')$ is same as its parent $N(t)$.
+
+\rulelabel{Merge} describes the semantics of replica $i$ merging a
+concurrent version from a (remote) replica $j$. The merging versions
+are heads of their respective branches $b_i$ and $b_j$.  Like its
+counterpart in Fig.~\ref{fig:git-semantics}, \rulelabel{Merge} insists
+that the LCAs of every other branch $b_k$ with $b_i$ and $b_j$ be
+causally related. This condition is however expressed in terms of
+version vectors with help of the GLB ($\sqcap$) and comparision
+($\lesseqgtr$) operators. For the LCA determination to be sound,
+the merging replica $i$ needs to have an accurate conception of the
+current version history. Futhermore, there cannot be a concurrent
+merge happening elsewhere that undermines the judgment of replica $i$
+(reg. the safety of $i \leftarrow j$ merge). These requirements are
+enforced by the premise $\forall (k\in dom(H)).~b_k \in dom(H_i) \conj
+H_i(b_k) = H_k(b_k)$, which insists that replica $i$'s knowledge of
+every other branch $k$ be current. This condition effectively
+linearizes merges by requiring a merge to either \emph{see} or
+\emph{be seen} by every other merge. In practice this is achieved
+through global coordination (Sec.~\ref{sec:implementation}). Note that
+\rulelabel{Merge} only pre-empts a concurrent \rulelabel{Merge}, not a
+concurrent \rulelabel{Commit}. A remote replica $k$ is allowed to keep
+committing new versions on to $b_k$ even as it remains unaware of the
+merge on replica $i$. Such leniency is imperative if the system were
+to retain the performance benefits of asynchronous replication.
+\rulelabel{FastFwd} is similar to \rulelabel{Merge}, so we don't
+discuss it separately.
+
+The rule \rulelabel{Sync} captures asynchronous communication between
+a pair of replicas ($i$ and $j$) to get one of them ($i$) up-to-date
+with the other ($j$).  Unlike the other rules, \rulelabel{Sync} does
+not extend the version history graph, and therefore has no counterpart
+in Fig.~\ref{fig:git-semantics}. It merely updates replica $i$'s
+knowledge of branch $b_k$ if replica $j$ happens to have later updates
+from $k$, i.e., $H_j(b_k)$ happens to be ahead of $H_i(b_k)$. The new
+versions on $b_k$ known to $j$ but not $i$ are then simply transferred
+to $i$.
+
+
