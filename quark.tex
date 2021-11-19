@@ -146,37 +146,25 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-   Programming geo-distributed replicated systems is hard given the
-   complexity of reasoning about constantly evolving states at different
-   replicas. Uncoordinated updates to replicas lead to states that are
-   unlikely to converge. In the absence of inter-replica coordination,
-   commutativity has come to be accepted as the \emph{de facto} design
-   principle to guarantee convergence. Unfortunately, designing replicated
-   state updates as commutative operations is hard considering that most
-   data types define operations that do not commute. Deriving a replicated
-   variant of a data type often entails a creative re-engineering of its
-   internal representation and algorithms so as to support commutative
-   operations while retaining (close to) the original semantics. In this
-   paper we propose an alternative approach to replicated data types that
-   avoids such complex re-engineering. Our approach is fundamentally
-   different in that it is based on the weaker notion of
-   \emph{mergeability}. Unlike commutativity, mergeability only requires a
-   data type to define \emph{a} merge semantics while leaving its existing
-   definition intact. Notably, our approach leaves type and merge semantics
-   completely unconstrained even as it guarantees eventual convergence and
-   full availability in an asynchronous distributed setting. In other
-   words, there is no need for the programmers to prove algebraic
-   properties of their implementations in order to obtain the convergence
-   and availability guarantees under a distributed execution. Such
-   weakening of obligations is made possible by a novel distributed runtime
-   that orchestrates distributed executions as per a structural
-   well-formedness criterion, which we show is sufficient to guarantee
-   convergence. We implement the runtime called \quark as a thin shim layer
-   on top of an off-the-shelf distributed database, and use it to run
-   mergeable replicated variants of several ordinary data types. Our
-   evaluation categorically demonstrate the generality of our approach and
-   the low overhead imposed by our runtime.
 
+  We propose a runtime-assisted approach to enforce convergence in
+  distributed executions of replicated data types. The key
+  distinguishing aspect of our approach is that it guarantees
+  convergence \emph{unconditionally} -- without requiring data
+  type operations to satisfy algebraic laws such as commutativity and
+  idempotence. Consequently, programmers are no longer obligated to
+  prove convergence on a per-type basis. Moreover, our approach lets
+  sequential data types be reused in a distributed setting by
+  extending their implementations rather than refactoring them.
+  The cornerstone of our approach is a distributed runtime that
+  orchestrates \emph{well-formed } executions that are guaranteed to
+  converge. Despite the utilization of a runtime, our approach comes
+  at no additional cost of per-operation latency and system-wide
+  availability. Instead, the tradeoff is the time required to achieve
+  convergence -- a metric we call \emph{staleness}. We quantify this
+  tradeoff via a thorough evaluation of a collaborative editing
+  application. and demonstrate a novel practical path towards
+  achieving high scalability through geo-replication.
 \end{abstract}
 
 

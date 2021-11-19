@@ -82,79 +82,91 @@ such as convergence.
 % hinders the widespread adoption of replicated data
 % types in software development.
 In this paper we propose such an alternative approach to convergent
-replicated data types.  
-% The key distinguishing characteristic of
-Our approach differs from the CRDT approach in
-two fundamental ways. Firstly, we adopt a state-centric model of
-replication with \emph{mergeability} of states as the defining
-characteristic in contrast to CRDTs' operation-centric model
-characterized by commutativity. Unlike commutativity, mergeability
-does not require a full-scale re-engineering of the data type
-definition. Instead, a data type only has to define a merge semantics
-in form a \C{merge} function to reconcile concurrent versions of the
-type in presence of their common ancestor version. Notably, \C{merge}
-function is left completely unconstrained even as convergence is
-guaranteed on the corresponding \emph{mergeable replicated data type}
-(MRDT)~\cite{mrdt}. Such strong guarantees are possible due to the
-simplicity of state-based reasoning relative to the operation- or
-trace-based one. Note that state-centric model of replication has also
-been adapted to CRDTs, but such state-based CRDTs require the
-replicated state to be organized as a lattice to guarantee convergence
--- a restriction we eliminate in our setting. 
+replicated data types. The key distinguishing characteristic of our
+approach is the utilization of a distributed runtime to orchestrate
+\emph{well-formed} distributed executions that are guaranteed to
+converge. We define well-formedness as a constraint over the
+\emph{states} that arise during the execution as opposed to the
+\emph{operations} that are involved in the execution. To allow for its
+enforcement, we adopt a state-centric model of replication based on
+version-controlled \emph{mergeable} states~\cite{mrdt} instead of an
+operation-centric model based on commutative operations. Unlike
+commutativity, mergeability does not require a data type definition to
+be refactored to suit distributed execution. Instead, the type
+definitions needs to be \emph{extended} with a \C{merge} function to
+reconcile concurrent versions of the type in presence of their common
+ancestor version. Notably, \C{merge} function is left completely
+unconstrained. Consequently, programmer can chose any merge semantics
+that make sense within the context of the data type's (sequential)
+semantics without risking the loss of convergence. Such strong
+guarantees are made possible by the simplicity of state-based
+reasoning combined with the run-time enforcement of well-formedness. 
 
-The second distinguishing aspect of our approach is the utilization of a
-distributed runtime that orchestrates \emph{well-formed} distributed
-executions that are guaranteed to converge. Note that it is easy to
-construct a trivial runtime that guarantees convergence of all executions.
-Such a runtime would make an extensive use of inter-replica coordination to
-synchronize the execution of every operation and thus induce a
-sequentially-consistent behavior. This would however defeat the purpose of
-state replication as the latency incurred for synchronized execution of an
-operation is prohibitively high, and the availability of the system during
-the execution is correspondingly low. It is therefore important for a
+% combined with the simplicity
+% of state-based reasoning. Note that state-centric model of
+% replication has also been explored in the context of CRDTs. However,
+% state-based CRDTs require the replicated state to be organized as a
+% lattice -- a restriction we relax in our setting. 
+
+Note that it is easy to construct a trivial runtime that guarantees
+convergence of all executions.  Such a runtime would make an extensive
+use of inter-replica coordination to synchronize the execution of
+every operation and thus induce a sequentially-consistent behavior.
+This would however defeat the purpose of state replication as the
+latency incurred for synchronized execution of an operation is
+prohibitively high, and the availability of the system during the
+execution is correspondingly low. It is therefore important for a
 distributed runtime of RDTs to not synchronize the execution of RDT
 operations. Orchestrating a well-formed convergent execution without
 impacting latency and availability may seem impossible due to the CAP
-theorem~\cite{cap}, but it is not the case in fact. While CAP theorem does
-rule out linearizability, it does not prohibit enforcing weaker consistency
-constraints on distributed executions. In fact many CRDTs, including the
-aforementioned \emph{remove-wins} set, implicitly assume \emph{causal
-consistency}, which is weaker than linearizability but is stronger than the
-default \emph{eventual consistency}. While causal consistency alone cannot
-guarantee convergence, it sufficiently constrains the distributed execution
-for the CRDT implementations to guarantee convergence. In this respect our
-approach differs in the sense that (a). It identifies a novel set of
-constraints on distributed execution that guarantee the convergence of an
-MRDT \emph{regardless} of its merge semantics, and (b). It localizes those
-constraints spatially and temporally into the runtime such that
-per-operation latency and system-wide availability remain unaffected.
-Sec.~\ref{sec:semantics} explains our runtime in detail. 
+theorem~\cite{cap}, but it is not the case in fact. While CAP theorem
+does rule out linearizability, it does not prohibit enforcing weaker
+consistency constraints on distributed executions. Our approach
+exploits this observation by (\rom{1}). Identifying a novel set of
+constraints on distributed executions that guarantee their
+convergence, and (\rom{2}). Localizing such constraints on
+(asynchronously executed) state merges such that per-operation latency
+and system-wide availability remain unaffected.
+Sec.~\ref{sec:concrete-sem} explains our runtime in detail.
+
+% In fact many CRDTs,
+% including the aforementioned \emph{remove-wins} set, implicitly assume
+% \emph{causal consistency}, which is weaker than linearizability but is
+% stronger than the default \emph{eventual consistency}. While causal
+% consistency alone cannot guarantee convergence, it sufficiently
+% constrains the distributed execution for the CRDT implementations to
+% guarantee convergence. In this respect our approach differs in the
+% sense that  
 
 \paragraph{Contributions} The contributions of this paper are summarized
 below:
 \begin{itemize}
-  \item We present a model of state replication for \emph{mergeable} data
-  types, i.e., data types equipped with a \C{merge} function, and identify a
-  structural well-formedness condition over distributed executions that is
-  sufficient to guarantee their convergence. This is in contrast to
-  existing models of replicated data types, where each type is obligated to
-  prove its convergence.
+  \item We present a runtime-assisted approach to state replication
+    that sufficiently constrains distributed executions so as to
+    guarantee the convergence of replicated data types. This is in
+    contrast to the existing models of replication, where each type is
+    obligated to prove its convergence.
 
-  \item We formalize a distributed runtime called \quark that orchestrates
-  well-formed distributed executions. We prove the correctness of \quark,
-  and also demonstrate its \emph{progress} property, namely that no
-  distributed execution would ever get ``stuck''. Besides the manual proofs
-  for the theorems, we also provide the full formalization of the \quark
-  system and its properties in Alloy~\cite{alloy} and Ivy~\cite{ivy}. The
-  Ivy formalization of \quark has been automatically verified with help of
-  Z3~\cite{z3}. To the best of our knowledge, this is the first time an SMT
-  solver was used to verify the \emph{meta-theory} of a formal setup.
+  \item We formalize the aforementioned constraints in the context of
+    a an abstract machine (named \quark) that manifests distributed
+    executions as version history graphs (similar to Git~\cite{git}).
+    We prove the \emph{convergence} and \emph{progress} properties of
+    the \quark abstract machine that together guarantee its soundness.
+    The formalization has been mechanized in Ivy~\cite{ivy} and
+    \emph{automatically} verified with help of Z3~\cite{z3}. To the
+    best of our knowledge, this is the first time an SMT solver was
+    used to verify the \emph{meta-theory} of a formal system.
 
-  \item We realize an implementation of \quark as a light-weight shim layer
-  on top of Scylla -- an off-the-shelf distributed key-value
-  store~\cite{scylla}. We do a thorough evaluation with a
-    collaborative-editing benchmark to demonstrate that \quark has
-    \emph{no} effect on the latency and availability of the system, while
-    slightly increasing the time to convergence.
+  \item We formalize \quark distributed machine that implements the
+    semantics of \quark abstract machine in the context of an
+    asynchronous distributed system. The formalization addresses
+    several practical concerns of distribution and serves as a
+    blueprint for an efficient implementation.
+
+  \item We describe an implementation of \quark as a light-weight shim
+    layer on top of Scylla -- an off-the-shelf distributed key-value
+    store~\cite{scylla}. We evaluate the implementation on a
+    collaborative-editing benchmark to demonstrate novel tradeoffs
+    presented by our approach.
 \end{itemize}
 
