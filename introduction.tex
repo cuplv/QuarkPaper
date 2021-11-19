@@ -93,7 +93,7 @@ version-controlled \emph{mergeable} states~\cite{mrdt} instead of an
 operation-centric model based on commutative operations. Unlike
 commutativity, mergeability does not require a data type definition to
 be refactored to suit distributed execution. Instead, the type
-definitions needs to be \emph{extended} with a \C{merge} function to
+definition only needs to be extended with a \C{merge} function to
 reconcile concurrent versions of the type in presence of their common
 ancestor version. Notably, \C{merge} function is left completely
 unconstrained. Consequently, programmer can chose any merge semantics
@@ -158,7 +158,7 @@ below:
     used to verify the \emph{meta-theory} of a formal system.
 
   \item We formalize \quark distributed machine that implements the
-    semantics of \quark abstract machine in the context of an
+    semantics of the \quark abstract machine in the context of an
     asynchronous distributed system. The formalization addresses
     several practical concerns of distribution and serves as a
     blueprint for an efficient implementation.

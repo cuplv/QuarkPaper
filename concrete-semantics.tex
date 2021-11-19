@@ -147,4 +147,15 @@ from $k$, i.e., $H_j(b_k)$ happens to be ahead of $H_i(b_k)$. The new
 versions on $b_k$ known to $j$ but not $i$ are then simply replicated
 at $i$.
 
-
+\paragraph{Garbage Collection} One downside of the distributed
+semantics in Fig.~\ref{fig:quark-semantics} is that maps $B$ and $N$
+that together track the version history grow monotonically as the
+execution progresses and new versions are created. Fortunately, this
+is easy to address as the execution only needs version history
+inasmuch as it is required to obtain the LCA versions for
+\rulelabel{Merge}. Since LCA version vectors monotonically increase,
+older versions with vectors less than the least known LCA vector can
+simply be garbage collected. Moreover, a replica can make this
+decision locally without having to synchronize with its peers. In
+practice, applications may prefer to flush out older version history
+to a stable storage from where it can be re-created as necessary.
