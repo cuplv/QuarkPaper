@@ -1,3 +1,10 @@
+\begin{figure}[ht]
+  \centering
+    \includegraphics[scale=0.35]{Figures/implementation2}
+\caption{\quark implementation architecture}
+\label{fig:implementation}
+\end{figure}
+
 \section{Implementation}
 \label{sec:implementation}
 
@@ -7,8 +14,8 @@ rely on Scylla for inter-replica communication, data replication,
 persistence, and fault tolerance. \quark translates the high-level
 mergeable data type implementations in OCaml to their low-level
 representations in the backing store and organizes their well-formed
-distributed executions. Fig.~\ref{fig:system} illustrates the overall
-architecture.
+distributed executions. Fig.~\ref{fig:implementation} illustrates the
+overall architecture.
 
 The runtime \quark is a straightforward implementation the of
 distributed machine \quark described in Sec.~\ref{sec:concrete-sem}.
