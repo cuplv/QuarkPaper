@@ -24,12 +24,12 @@ end
   \begin{subfigure}[t]{0.55\columnwidth}
     \includegraphics[scale=0.35]{Figures/crdt-execs-1}
     \caption{}
-    \label{fig:crdt-execs-1}
+    \label{fig:crdt-exec-1}
   \end{subfigure}
   \begin{subfigure}[t]{0.44\columnwidth}
     \includegraphics[scale=0.35]{Figures/crdt-execs-2}
     \caption{}
-    \label{fig:crdt-execs-2}
+    \label{fig:crdt-exec-2}
   \end{subfigure}
 \caption{Anamolous executions resulting from the Asynchronous
   replication of \C{Set}. Dashed lines denote effect propagation.}
@@ -42,10 +42,10 @@ The interface hides a reference to a set (\C{Set.t}), which can be
 updated in-place via \C{add} and \C{remove} operations. \C{Set} is an
 ordinary data type meant for for sequential execution. Under a
 concurrent execution with an asynchronously replicated state, \C{Set}
-would exhibit anamolous behaviours such as those in
+would exhibit anamolous behaviors such as those in
 Fig.~\ref{fig:crdt-execs}.
 
-Fig.~\ref{fig:crdt-execs-1} shows an anamolous execution with three
+Fig.~\ref{fig:crdt-exec-1} shows an anamolous execution with three
 replicas -- $R_1$, $R_2$, and $R_3$, all of which start with a
 singleton set containing the element $e$. A client connects to the
 replica $R_3$ and executes a \C{remove($e$)} operation, which is then
@@ -63,7 +63,7 @@ divergence. As such, \C{Set} is not a CRDT due to the admittance of
 non-commutative operations. Nonetheless, there exist approaches to
 transform \C{Set} into a CRDT by re-engineering its interface and
 operations~\cite{crdts, zawirski-thesis, zhang}. For instance, the
-anomalous execution in Fig.~\ref{fig:crdt-execs-1} can be pre-empted
+anomalous execution in Fig.~\ref{fig:crdt-exec-1} can be preempted
 by ensuring that updates are only ever applied in the causal order.
 This can be done by extending \C{Set} with vector clocks to keep track
 of the causal history of each operation. A set \C{add} (resp.
@@ -75,7 +75,7 @@ at the current replica. When an effect is received at a replica, it is
 buffered until the time all its causally-preceding effects (as
 captured by the tagged vector clock) have already been received and
 applied. This strategy would preempt the execution in
-Fig.~\ref{fig:crdt-execs-1} by buffering $R_2$'s \C{add} at $R_1$
+Fig.~\ref{fig:crdt-exec-1} by buffering $R_2$'s \C{add} at $R_1$
 until the causally-preceding \C{remove} of $R_1$ is received and
 applied. An interface for such a \emph{causally-consistent} set RDT is
 shown in Fig.~\ref{fig:cc-set}. 
@@ -106,7 +106,7 @@ end
 
 \noindent\paragraph{Add-Wins Set CRDT} Unfortunately, \C{Set}
 data type of Fig.~\ref{fig:cc-set} still admits divergent executions
-due to concurrent updates.  Fig.~\ref{fig:crdt-execs-2} describes one
+due to concurrent updates.  Fig.~\ref{fig:crdt-exec-2} describes one
 such execution. Here, replicas $R_1$ and $R_2$ both start with a
 singleton set $\{e\}$.  Two distinct clients connect to $R_1$ and
 $R_2$ respectively and issue two concurrent \C{remove($e$)}
@@ -115,8 +115,8 @@ operations. Later, another client connects to $R_2$ and issues an
 asynchronously applied at remote replicas as shown in the figure,
 resulting in the divergent states at $R_1$ and $R_2$.
 
-Note that, unlike the execution in Fig.~\ref{fig:crdt-execs-1}, the
-conflicting operations in Fig.~\ref{fig:crdt-execs-2}, namely $R_1$'s
+Note that, unlike the execution in Fig.~\ref{fig:crdt-exec-1}, the
+conflicting operations in Fig.~\ref{fig:crdt-exec-2}, namely $R_1$'s
 \C{remove} and $R_2$'s \C{add}, are \emph{not} causally related,
 hence their relative order is not determined by the sequential
 specification of the data type. Forcing a causal relationship between
@@ -126,11 +126,11 @@ therefore becomes inevitable to ascribe semantics to concurrent
 executions to restore convergence. This is done by imposing an
 \emph{arbitration order} among concurrent conflicting operations,
 which are otherwise unordered. For example, in
-Fig.~\ref{fig:crdt-execs-2}, we might let $R_2$'s \C{add} override
+Fig.~\ref{fig:crdt-exec-2}, we might let $R_2$'s \C{add} override
 $R_1$'s \C{remove} considering that \C{add} is re-adding an
 element after a previous remove. Ordering concurrent removes ahead
-of adds uiniformly on all replicas leads to an implementation of
-\C{Set} RDT where concurrent (re-)adds consistenty \emph{win}
+of adds uniformly on all replicas leads to an implementation of
+\C{Set} RDT where concurrent (re-)adds consistently \emph{win}
 over removes. Such an \emph{add-wins} set is useful, for instance, to
 implement a shared shopping cart where two users can concurrently
 remove an item from the cart, but if one of them re-adds it then the
@@ -151,7 +151,7 @@ is no less than $e$'s local vector clock, i.e., only if the arriving
 \C{Remove} has seen (i.e., causally succeeds) at least those
 \C{add($e$)} operations the current replica is aware of.  Otherwise
 the effect is simply a no-op. This strategy would result in convergent
-states despite the execution in Fig.~\ref{fig:crdt-execs-2} as $R_2$'s
+states despite the execution in Fig.~\ref{fig:crdt-exec-2} as $R_2$'s
 \C{remove} effectively becomes a no-op at $R_1$ due to there being at
 least one \C{add} operation on $e$ that it hasn't seen. The
 \emph{add-wins} \C{Set} interface is similar to Fig.~\ref{fig:cc-set},
@@ -172,7 +172,7 @@ needs of their application. Some of the effort can be mitigated by
 strengthening the underlying system model insofar as it doesn't affect
 the latency and availability of the application. For instance, a
 system that always delivers messages in the causal order would
-automatically preempt the execution in Fig.~\ref{fig:crdt-execs-1}
+automatically preempt the execution in Fig.~\ref{fig:crdt-exec-1}
 without the need for additional intervention on behalf of the
 developer. This is a particularly attractive proposition considering
 that causal consistency can be ``bolted on'' an existing
@@ -180,8 +180,8 @@ implementation of an eventually consistent system without weakening
 its guarantees~\cite{bolton}. Unfortunately, such strengthening of the
 system model would deliver no benefits to the developer if they still
 have to reason about fine-grained causal dependencies to guarantee
-convergence, such as in the case of Fig.~\ref{fig:crdt-execs-2}. As we
-observed earlier, the execution in Fig.~\ref{fig:crdt-execs-2} seems
+convergence, such as in the case of Fig.~\ref{fig:crdt-exec-2}. As we
+observed earlier, the execution in Fig.~\ref{fig:crdt-exec-2} seems
 inevitable unless every pair of \C{add} and \C{remove} operations are
 synchronized, which, regrettably, is not a practical option. The
 developer therefore seems to be stuck.
@@ -211,12 +211,12 @@ converge.
   \begin{subfigure}[t]{0.55\columnwidth}
     \includegraphics[scale=0.35]{Figures/mrdt-execs-1}
     \caption{}
-    \label{fig:mrdt-execs-1}
+    \label{fig:mrdt-exec-1}
   \end{subfigure}
   \begin{subfigure}[t]{0.44\columnwidth}
     \includegraphics[scale=0.35]{Figures/mrdt-execs-2}
     \caption{}
-    \label{fig:mrdt-execs-2}
+    \label{fig:mrdt-exec-2}
   \end{subfigure}
 \caption{Equivalent executions of Fig.~\ref{fig:crdt-execs} in
 state-centric replication model. Dashed lines now denote state merges.}
@@ -247,41 +247,61 @@ any newly added elements in either versions. Concretely:
               (s1 $\cap$ s2) $\cup$ (s1 - s) $\cup$ (s2 - s)
 \end{ocaml}
 Equipped with the above set merge function, we can now consider the
-equivalent execution of Fig.~\ref{fig:crdt-execs-1} in state-centric
-model. The execution is shown in Fig.~\ref{fig:mrdt-execs-1}. The
+equivalent execution of Fig.~\ref{fig:crdt-exec-1} in state-centric
+model. The execution is shown in Fig.~\ref{fig:mrdt-exec-1}. The
 initial version on all three replicas ($v_0$) is the singleton set
 $\{e\}$. Applying operations to replicas creates new versions, e.g.,
-$v_1$ on $R_3$. Changes can be propagated by merging versions, e.g.,
-version $v_2$ on $R_2$ is a result of merging $v_0$ and $v_1$ in
-presence of their lowest common ancestor (LCA) version
-$v_0$\footnote{Versions $v_0$ and $v_1$ are not concurrent as the
+$v_1$ on $R_3$, and $v_2$ and $v_3$ on $R_2$. Changes can be propagated by merging versions, e.g.,
+version $v_2$ on $R_2$ is a result of merging $v_1$ into $v_0$ for
+which $v_0$ serves as the lowest common ancestor (LCA)
+  \footnote{Versions $v_0$ and $v_1$ are not concurrent as the
   former is an ancestor of the latter. Merging $v_1$ into $v_0$ is
   nonetheless possible as $v_1$ is ahead of $v_0$ in causal order. In
   Git parlance this is a \emph{fast forward} merge.}.
-Likewise $v_4$ on $R_1$ is created by merging $v_3$ and $v_0$ in
-presence of their LCA $v_0$. By the end of the execution, versions
-$v_4$ and $v_3$ at $R_1$ and $R_2$ (resp.) have witnessed the same set
-of operations, hence are in agreement.\GK{fix this.}
+Likewise $v_4$ on $R_1$ is created by merging $v_2$ into $v_0$ in
+presence of their LCA $v_0$. The next version $v_5$ on $R_1$ is the
+result of merging $R_2$'s $v_3$ into $R_1$'s $v_4$. The LCA for this
+merge is $v_2$. By the end of the execution, versions $v_5$ and $v_3$
+on $R_1$ and $R_2$ (resp.) have witnessed the same set of operations,
+hence are in agreement.
+
+
+\begin{figure}[ht]
+  \centering
+  \begin{subfigure}[t]{0.4\columnwidth}
+    \includegraphics[scale=0.35]{Figures/mrdt-execs-3}
+    \caption{}
+    \label{fig:mrdt-exec-3}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.57\columnwidth}
+    \includegraphics[scale=0.35]{Figures/mrdt-execs-4}
+    \caption{}
+    \label{fig:mrdt-exec-4}
+  \end{subfigure}
+  \caption{Executions demonstrating the difference between linearized
+  (former) and concurrent (latter) merges.}
+\label{fig:mrdt-execs-2}
+\end{figure}
 
 \noindent\paragraph{Well-formed executions and the \quark runtime}
 Convergence however is not an inherent virtue of the state-centric
-replication model. Fig.~\ref{fig:mrdt-execs-2} shows the state-centric
-analogue of the execution in Fig.~\ref{fig:crdt-execs-2} which
+replication model. Fig.~\ref{fig:mrdt-exec-2} shows the state-centric
+analogue of the execution in Fig.~\ref{fig:crdt-exec-2} which
 diverges. Here $R_1$ and $R_2$ start with version $v_0 \,=\, \{e\}$.
 $R_2$ performs a \C{remove} and and an \C{add} making versions
 $v_1$ and $v_2$ respectively. Simultaneously, $R_1$ performs a
 \C{remove} to make $v_3$. Replica $R_1$ now obtains $R_2$'s changes by
-merging versions $V_1$ and $v_2$ to make new versions $v_4$ and $v_5$
+merging versions $v_1$ and $v_2$ to make new versions $v_4$ and $v_5$
 respectively. LCAs for these merges are $v_0$ and $v_1$. Concurrently,
 $R_2$ obtains $R_1$'s changes by merging $v_3$ with $v_2$ (LCA =
 $v_0$) to make $v_6$.  Now $R_1$ and $R_2$ have same set of changes
 yet their final versions differ.
 
-Note that the anamolous execution in Fig.~\ref{fig:mrdt-execs-2} could
+Note that the anamolous execution in Fig.~\ref{fig:mrdt-exec-2} could
 have been avoided had the merges between $R_1$ and $R_2$ been
-linearized. Fig.~\ref{fig:mrdt-execs-3} shows an execution that only
-slightly differs from the one in Fig.~\ref{fig:mrdt-execs-2}. The
-difference is that the merges in Fig.~\ref{fig:mrdt-execs-3} happen
+linearized. Fig.~\ref{fig:mrdt-exec-3} shows an execution that only
+slightly differs from the one in Fig.~\ref{fig:mrdt-exec-2}. The
+difference is that the merges in Fig.~\ref{fig:mrdt-exec-3} happen
 linearly: first $R_1$ is merged into $R_2$ (bringing $R_1$'s
 \C{remove}), then $R_2$ into $R_1$ (bringing $R_2$'s \C{remove}),
 followed again by $R_2$ into $R_1$ (bringing $R_2$'s \C{add}). As a
@@ -291,46 +311,49 @@ linearizations of merges; for instance, $R_1 \,\rightarrow\, R_2$
 merge could be ordered between the two $R_2 \rightarrow R_1$ merges.
 However, all linearizations result in the same final state $\{e\}$.
 Another important point to note is that only the merges are
-linearized; not the entire execution. In Fig.~\ref{fig:mrdt-execs-3},
+linearized; not the entire execution. In Fig.~\ref{fig:mrdt-exec-3},
 both $R_1$ and $R_2$'s \C{remove}s remove the same element $e$, which
 is not possible in a linearized execution. Leaving the execution
 unconstrained is crucial to satisfy the limits imposed by the CAP
 theorem on a highly-available partition-tolerant distributed system.
 
-In the context of Fig.~\ref{fig:mrdt-execs-3}, it is quite clear what
+In the context of Fig.~\ref{fig:mrdt-exec-3}, it is quite clear what
 linearization of merges means and how to enforce it via
 synchronization (for e.g., wrapping each merge within a global lock).
 In general however, the semantics of merge linearization isn't as cut
 and dried. For instance, consider the execution in
-Fig.~\ref{fig:mrdt-execs-4}. The four replicas involved in the
+Fig.~\ref{fig:mrdt-exec-4}. The four replicas involved in the
 execution start with version $v_0 \,=\, \{e\}$. The replicas perform
 local operations as shown in the figure to make versions $v_1$ to
-$v_5$. Next they perform a series of merges to propagate local
+$v_3$. Next they perform a series of merges to propagate local
 changes. The merges can be ordered in time as following: first $R_2
-\rightarrow R_1$, then $R_3 \rightarrow R_1$, then $R_2 \rightarrow
-R_4$, and finally $R_3 \rightarrow R_4$. Despite linearly ordered in
-time, the merges nonetheless result in divergent execution. The
+\rightarrow R_1$ (merging $v_1$), then $R_3 \rightarrow R_1$ twice
+(merging $v_2$ and $v_3$ resp.), then $R_3 \rightarrow R_4$ (merging
+$v_3)$, and finally $R_2 \rightarrow R_4$ (merging $v_1$). These
+merges collectively propagate the effects of \C{add} and \C{remove}
+operations to $R_1$ and $R_2$. And despite being ordered in time, the
+they nonetheless result in a divergent execution ($v_5 \neq v_7$). The
 problem here is that, although merges are executed linearly, the
 execution graph does not reflect this linearity; merges of that end in
-$R_1$ in Fig.~\ref{fig:mrdt-execs-4} are effectively concurrent with
+$R_1$ in Fig.~\ref{fig:mrdt-exec-4} are effectively concurrent with
 those that end in $R_4$. This shows that simply synchronizing the
 execution of merges does not necessarily result in convergence.
 
 Our key insight to overcome this impasse is a \emph{well-formedness}
 condition on execution graphs that ensures convergence of final
 states. To understand well-formedness, let us contrast the bad
-executions in Figs.~\ref{fig:mrdt-execs-2} and~\ref{fig:mrdt-execs-4}
-against the good execution in Fig.~\ref{fig:mrdt-execs-3}. Observe
-that in Fig.~\ref{fig:mrdt-execs-2}, \emph{every} pair of concurrent
+executions in Figs.~\ref{fig:mrdt-exec-2} and~\ref{fig:mrdt-exec-4}
+against the good execution in Fig.~\ref{fig:mrdt-exec-3}. Observe that
+in Fig.~\ref{fig:mrdt-exec-2}, \emph{every} pair of concurrent
 versions on $R_1$ and $R_2$ have a unique lowest common ancestor
 (LCA). For instance, LCA of $(v_5,v_6)$ is $v_6$, $(v_5,v_4)$ is
 $v_3$, $(v_1,v_2)$ is $v_0$ and so on. By contrast in
-Fig.~\ref{fig:mrdt-execs-2}, versions $v_5$ and $v_6$ have two LCAs,
+Fig.~\ref{fig:mrdt-exec-2}, versions $v_5$ and $v_6$ have two LCAs,
 namely $v_2$ and $v_3$. Both these versions are common ancestors of
 $v_5$ and $v_6$, and both are \emph{lowest} in the sense that there do
 not exist versions lower (in the execution graph) than $v_2$ and $v_3$
 that are also common ancestors of $v_5$ and $v_6$. Likewise in
-Fig.~\ref{fig:mrdt-execs-4}, versions $v_7$ and $v_9$ have two LCAs --
+Fig.~\ref{fig:mrdt-exec-4}, versions $v_7$ and $v_9$ have two LCAs --
 $v_2$ and $v_4$. Multiple LCAs is an indication that there exist
 merges prior in the execution graph that are effectively concurrent.
 Considering that our approach to convergence in state-centric model
@@ -338,17 +361,15 @@ crucially relies on linearity of merges, presence of multiple LCAs
 opens up the possibility of divergence. We therefore define
 well-formed execution graphs as those where LCAs for every pair of
 concurrent versions is unique. As we prove in
-Sec.~\ref{sec:formalization}, enforcing this structural
+Sec.~\ref{sec:abstract-sem}, enforcing this structural
 well-formedness condition indeed guarantees the convergence of
-distributed executions. In Sec.~\ref{fig:implementation}, we describe
-a distributed runtime called \quark whose primary purpose is to
-enforce the well-formedness condition on distributed executions. The
-runtime makes it possible to automatically promote ordinary data types
-equipped with a merge function to convergent replicated data types.
+distributed executions. In Sec.~\ref{sec:concrete-sem}, we formalize a
+distributed runtime called \quark whose primary purpose is to enforce
+the well-formedness condition on distributed executions. In
+Sec.~\ref{sec:implementation}, we describe its implementation. The
+runtime makes it possible to automatically enforce convergence,
+letting us promote ordinary sequential data types to convergent
+replicated types by simply equipping them with a merge function.
 Thus, extending the \C{Set} interface of Fig.~\ref{fig:ocaml-set} with
 the two-line \C{Set.merge} function shown above is sufficient to
 obtain a convergent replicated set data type.
-
-The following section formalizes the aforementioned intuitions with
-help of an abstract machine that generates only the well-formed
-executions. \GK{fix this}

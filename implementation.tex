@@ -14,7 +14,7 @@ The runtime \quark is a straightforward implementation the of
 distributed machine \quark described in Sec.~\ref{sec:concrete-sem}.
 We manifest each component of the state, namely the branch map $B$,
 the value map $N$, and the head map $H$, as a column family (i.e., a
-table) in scylla. The synchronization needed to linearize merges is
+table) in Scylla. The synchronization needed to linearize merges is
 implemented with help of Scylla's support for conditional updates (CAS
 operations) and expiring columns. The total order among merges is
 enforced with help of \C{Quorum} reads and writes. Each user process

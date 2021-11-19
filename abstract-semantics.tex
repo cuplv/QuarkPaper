@@ -1,5 +1,5 @@
 \section{Semantics of State-Centric Replication}
-\label{sec:vc-semantics}
+\label{sec:abstract-sem}
 
 \input{git-semantics}
 
@@ -174,6 +174,14 @@ $L(b',b'')$ is same as $L(b,b'')$. Fork operation could model, for
 e.g., creating a new replica by forking off the current state of an
 existing replica.
 
+\begin{figure}[ht]
+  \centering
+    \includegraphics[scale=0.4]{Figures/merge-precondition}
+\caption{Explanation for the premise $L(b,b'') \reaches L(b',b'') \disj L(b',b'')
+          \reaches L(b,b'')$ on the \rulelabel{Merge} rule.}
+\label{fig:merge-precondition}
+\end{figure}
+
 \rulelabel{Merge} describes the semantics of merging the head of a
 branch $b'$ into $b$ resulting in an new version $v$ on $b$.
 Intuitively, \rulelabel{Merge} models the information exchange between
@@ -207,19 +215,19 @@ conclusion of the \rulelabel{Merge} captures this update using the set
 comprehension notation. It also updates the LCA of the merging
 branches $L(b,b')$ to $H(b')$ since the head of $b'$ is merged into
 $b$. Updates to the other components of the state (e.g., $C$) follow
-the same rationale as previours rules. Two edges are added to $E$ as
-the new version $v$ is a descendent of the two merging versions.
+the same rationale as previous rules. Two edges are added to $E$ as
+the new version $v$ is a descendant of the two merging versions.
 
 Another notable aspect of the \rulelabel{Merge} rule is the invocation
 of the \C{merge} function on the values of the  merging versions and
 their common ancestor to derive the result of the merge. As explained
 above, our development is parameterized on the domain of values for
-which a \C{merge} function is defined. No futher constraints are
+which a \C{merge} function is defined. No further constraints are
 imposed on \C{merge}. We use an uncurried version of \C{merge} to
 avoid clutter.
 
 \rulelabel{FastFwd} generalizes merge to the case when the merging
-version $H(b')$ is a descendent of the version $H(b)$. In this case
+version $H(b')$ is a descendant of the version $H(b)$. In this case
 $H'(b)$, the new head of $b$, needs to have the same value and same
 set of commits as $H(b')$. Other premises and conclusions are similar
 to the \rulelabel{Merge} rule. Note that we don't need a separate rule
@@ -229,7 +237,7 @@ Having a separate rule lets us elide this constraint.
 
 \paragraph{Properties} We now formalize the notable properties of the
 abstract machine and its executions\footnote{
-  The manaul proofs of the theorems and their Ivy
+  The manual proofs of the theorems and their Ivy
   formalization~\cite{ivy} can be found in the supplementary material.
 }. 
 
@@ -267,7 +275,7 @@ Lemmas~\ref{lem:lca-uniqueness} and~\ref{lem:commit-monotonicity}.
 
 \begin{theorem}[{\bf Convergence}]
   \label{thm:convergence}
-  In every reachable state $\Delta = ((V,E),N,C,H,L)$ of the abstract
+  In every reachable state $\Delta$ = $((V,E),N,C,H,L)$ of the abstract
   machine: Forall distinct $b_1, b_2 \in dom(H)$, and $v_1, v_2 \in V$
   such that $v_1 = H(b_1)$ and $v_2 = H(b_2)$, the following is true:
   $C(v_1) = C(v_2) \Rightarrow N(v_1) = N(v_2)$.
@@ -279,3 +287,23 @@ have the same value. Intuitively, this means that any two replicas
 that witnessed the same set of user actions arrive at the same final
 state \emph{regardless} of the order in which they are witnessed. 
 
+Convergence is vacuously true if the abstract machine never lets any
+merges to happen, i.e., if the premises of the \rulelabel{Merge} rule
+are too strong to be never true. We prove that this is not the case
+with help of the following theorem:
+
+\begin{theorem}[{\bf Progress}]
+  \label{thm:progress}
+  Every reachable state $\Delta = ((V,E),N,C,H,L)$ of the abstract
+  machine is either: 
+  \begin{itemize}
+    \item A ``quiescent'' state, where: $\forall b_1,b_2 \in
+      dom(H).~C(H(b_1)) = C(H(b_2))$, Or
+    \item An ``unstuck'' state, where there exist $b_1,b_2 \in dom(H)$
+      that satisfy the pre-conditions of \rulelabel{Merge} or
+      \rulelabel{FastFwd} rules, i.e., $b_1$ and $b_2$ are mergeable. 
+  \end{itemize}
+\end{theorem}
+
+Convergence and Progress together ensure the soundness of the \quark
+abstract machine.

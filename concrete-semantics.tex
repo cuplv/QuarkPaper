@@ -60,7 +60,7 @@ vectors $t_1$ and $t_2$. Concretely:
   $t_l \,=\, t_1 \sqcap t_2$
 \end{center}
 Where $t_l$ is the version vector of the LCA and $\sqcap$ is the GLB
-operator. Conversely, the version vector indentifying the result of a
+operator. Conversely, the version vector identifying the result of a
 merge can be computed as the \emph{least upper bound} (LUB) of the two
 version vectors involved in the merge. Concretely:
 \begin{center}
@@ -73,7 +73,7 @@ corresponding to the current branch $b$ to signify that this is a new
 version on $b$. So the actual version vector of the merge is $t_m' =
 t_m[b \mapsto t_m(b)+1]$. The GLB and LUB operations on version
 vectors are standard~\cite{vectorclock} -- GLB is computed by taking
-the component-wise minumum, and LUB by taking their maximum. The
+the component-wise minimum, and LUB by taking their maximum. The
 comparison of version vectors is also standard -- $t_1 < t_2$ iff
 $\forall b.~t_1(b) < t_2(b)$. Clearly, not all version vectors are
 comparable. We write $t_1 \lesseqgtr t_2$ if vectors $t_1$ and $t_2$
@@ -117,10 +117,10 @@ are heads of their respective branches $b_i$ and $b_j$.  Like its
 counterpart in Fig.~\ref{fig:git-semantics}, \rulelabel{Merge} insists
 that the LCAs of every other branch $b_k$ with $b_i$ and $b_j$ be
 causally related. This condition is however expressed in terms of
-version vectors with help of the GLB ($\sqcap$) and comparision
+version vectors with help of the GLB ($\sqcap$) and comparison
 ($\lesseqgtr$) operators. For the LCA determination to be sound,
 the merging replica $i$ needs to have an accurate conception of the
-current version history. Futhermore, there cannot be a concurrent
+current version history. Furthermore, there cannot be a concurrent
 merge happening elsewhere that undermines the judgment of replica $i$
 (reg. the safety of $i \leftarrow j$ merge). These requirements are
 enforced by the premise $\forall (k\in dom(H)).~b_k \in dom(H_i) \conj
@@ -129,7 +129,7 @@ every other branch $k$ be current. This condition effectively
 linearizes merges by requiring a merge to either \emph{see} or
 \emph{be seen} by every other merge. In practice this is achieved
 through global coordination (Sec.~\ref{sec:implementation}). Note that
-\rulelabel{Merge} only pre-empts a concurrent \rulelabel{Merge}, not a
+\rulelabel{Merge} only preempts a concurrent \rulelabel{Merge}, not a
 concurrent \rulelabel{Commit}. A remote replica $k$ is allowed to keep
 committing new versions on to $b_k$ even as it remains unaware of the
 merge on replica $i$. Such leniency is imperative if the system were
@@ -155,7 +155,7 @@ is easy to address as the execution only needs version history
 inasmuch as it is required to obtain the LCA versions for
 \rulelabel{Merge}. Since LCA version vectors monotonically increase,
 older versions with vectors less than the least known LCA vector can
-simply be garbage collected. Moreover, a replica can make this
+simply be garbage-collected. Moreover, a replica can make this
 decision locally without having to synchronize with its peers. In
 practice, applications may prefer to flush out older version history
 to a stable storage from where it can be re-created as necessary.
