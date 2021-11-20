@@ -8,14 +8,14 @@
 \section{Implementation}
 \label{sec:implementation}
 
-We implement \quark runtime as a lightweight shim layer on top of
-Scylla -- an off-the-shelf distributed data store~\cite{scylla}. We
-rely on Scylla for inter-replica communication, data replication,
-persistence, and fault tolerance. \quark translates the high-level
-mergeable data type implementations in OCaml to their low-level
-representations in the backing store and organizes their well-formed
-distributed executions. Fig.~\ref{fig:implementation} illustrates the
-overall architecture.
+We realize a prototype of \quark runtime as a lightweight shim layer
+on top of Scylla -- an off-the-shelf distributed data
+store~\cite{scylla}. We rely on Scylla for inter-replica
+communication, data replication, persistence, and fault tolerance.
+\quark translates the high-level mergeable data type implementations
+in OCaml to their low-level representations in the backing store and
+organizes their well-formed distributed executions.
+Fig.~\ref{fig:implementation} illustrates the overall architecture.
 
 The runtime \quark is a straightforward implementation the of
 distributed machine \quark described in Sec.~\ref{sec:concrete-sem}.
