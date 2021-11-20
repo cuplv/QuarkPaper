@@ -40,23 +40,23 @@
 %
 
 %
-\begin{smathpar}
-\begin{array}{c}
-\RULE
-{
-  b_i\in dom(H)\spc
-  b_j\not\in dom(H) \spc
-  t = H_i(b_i)\spc
-  t' = t[b_j \mapsto 1]
-}
-{
-  (B,N,H) \qstepsto (B_j[(b_j,1) \mapsto t'],\, N[t' \mapsto N(t)],\,
-        H_j[b_j \mapsto t'])
-}
-\spc
-[\rulelabel{Fork}]
-\end{array}
-\end{smathpar}
+% \begin{smathpar}
+% \begin{array}{c}
+% \RULE
+% {
+%   b_i\in dom(H)\spc
+%   b_j\not\in dom(H) \spc
+%   t = H_i(b_i)\spc
+%   t' = t[b_j \mapsto 1]
+% }
+% {
+%   (B,N,H) \qstepsto (B_j[(b_j,1) \mapsto t'],\, N[t' \mapsto N(t)],\,
+%         H_j[b_j \mapsto t'])
+% }
+% \spc
+% [\rulelabel{Fork}]
+% \end{array}
+% \end{smathpar}
 %
 
 %
@@ -88,30 +88,30 @@
 
 
 %
-\begin{smathpar}
-\begin{array}{c}
-\RULE
-{
-  b_i,b_j\in dom(H_i)\spc
-  \forall (k\in dom(H)).~b_k \in dom(H_i) \conj H_i(b_k) = H_k(b_k)\\
-  t_i = H_i(b_i) \spc
-  t_j = H_i(b_j)\spc
-  t_i < t_j \spc
-  t' = t_j[b_i \mapsto t_i(b_i)+1]\spc
-  \forall (k\in dom(H)).~
-    (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))
-  %
-% \neg(H(b') \reaches H(b))\spc
-% H(b) \reaches H(b')\\
-}
-{
-  (B,N,H) \qstepsto (B_i[(b_i,t'(b_i)) \mapsto t'],
-            N[t' \mapsto N(t_j)],\, H_i[b_i \mapsto t'])
-}
-\spc
-[\rulelabel{FastFwd}]
-\end{array}
-\end{smathpar}
+% \begin{smathpar}
+% \begin{array}{c}
+% \RULE
+% {
+%   b_i,b_j\in dom(H_i)\spc
+%   \forall (k\in dom(H)).~b_k \in dom(H_i) \conj H_i(b_k) = H_k(b_k)\\
+%   t_i = H_i(b_i) \spc
+%   t_j = H_i(b_j)\spc
+%   t_i < t_j \spc
+%   t' = t_j[b_i \mapsto t_i(b_i)+1]\spc
+%   \forall (k\in dom(H)).~
+%     (t_i \sqcap H_i(b_k)) \lesseqgtr (t_j \sqcap H_i(b_k))
+%   %
+% % \neg(H(b') \reaches H(b))\spc
+% % H(b) \reaches H(b')\\
+% }
+% {
+%   (B,N,H) \qstepsto (B_i[(b_i,t'(b_i)) \mapsto t'],
+%             N[t' \mapsto N(t_j)],\, H_i[b_i \mapsto t'])
+% }
+% \spc
+% [\rulelabel{FastFwd}]
+% \end{array}
+% \end{smathpar}
 %
 
 

@@ -2,14 +2,14 @@
 \label{sec:related}
 
 The idea of state-based replicated data types with three-way merge
-functions was first proposed by Kaki et. al. in~\cite{mrdt},
-where authors demonstrate an approach for deriving merge functions
-from first principles for various data types. However, the resultant
-\emph{mergeable replicated data types} (MRDTs) were never proved to be
-convergent. As we demonstrate for the \C{Set} data type in
-Sec.~\ref{sec:motivation}, simple merge functions with intuitive merge
-semantics can nonetheless lead to divergent executions. The \quark
-preempts such executions to guarantee convergence on MRDTs.
+functions was first proposed in~\cite{mrdt}, where authors demonstrate
+an approach for deriving merge functions from first principles for
+various data types. However, the resultant \emph{mergeable replicated
+data types} (MRDTs) were never proved to be convergent. As we
+demonstrate for the \C{Set} data type in Sec.~\ref{sec:motivation},
+simple merge functions with intuitive merge semantics can nonetheless
+lead to divergent executions. The \quark preempts such executions to
+guarantee convergence on MRDTs.
 
 Concurrent Revisions~\cite{BBL+10} proposes versioned state for
 shared-memory concurrent programs in order to guarantee determinism.
@@ -40,7 +40,7 @@ operations since the next weaker consistency model -- causal
 consistency, is insufficient to guarantee convergence (as
 Sec.~\ref{sec:motivation} demonstrates). Conversely, \quark cannot
 reason about application-level invariants, such as $\C{balance}\ge 0$
-in an banking application. Thus both approaches confer complimentary
+in a banking application. Thus both approaches confer complimentary
 benefits on application developers.
 
 Finally, the implementation of \quark bears resemblance to

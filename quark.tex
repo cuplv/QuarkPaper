@@ -60,7 +60,7 @@
 %% Citation style
 %% Note: author/year citations are required for papers published as an
 %% issue of PACMPL.
-\citestyle{acmauthoryear}   %% For author/year citations
+\citestyle{acmnumeric}   %% For author/year citations
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,15 +156,12 @@
   prove convergence on a per-type basis. Moreover, our approach lets
   sequential data types be reused in a distributed setting by
   extending their implementations rather than refactoring them.
-  The cornerstone of our approach is a distributed runtime that
+  The novel component of our approach is a distributed runtime that
   orchestrates \emph{well-formed } executions that are guaranteed to
   converge. Despite the utilization of a runtime, our approach comes
-  at no additional cost of per-operation latency and system-wide
-  availability. Instead, the tradeoff is the time required to achieve
-  convergence -- a metric we call \emph{staleness}. We quantify this
-  tradeoff via a thorough evaluation of a collaborative editing
-  application. and demonstrate a novel practical path towards
-  achieving high scalability through geo-replication.
+  at no additional cost of latency and availability. We implement our
+  approach in a system called \quark and evaluate its performance over
+  a large-scale collaborative editing application. 
 \end{abstract}
 
 
@@ -216,6 +213,7 @@
 
 \input{related}
 
+\bibliography{all}
 
 %% Acknowledgments
 \begin{acks}                            %% acks environment is optional
@@ -240,8 +238,8 @@
 
 
 %% Appendix
-\appendix
-\section{Appendix}
+% \appendix
+% \section{Appendix}
 
 Text of appendix \ldots
 

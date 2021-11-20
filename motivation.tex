@@ -177,7 +177,7 @@ without the need for additional intervention on behalf of the
 developer. This is a particularly attractive proposition considering
 that causal consistency can be ``bolted on'' an existing
 implementation of an eventually consistent system without weakening
-its guarantees~\cite{bolton}. Unfortunately, such strengthening of the
+its guarantees~\cite{BoltOn}. Unfortunately, such strengthening of the
 system model would deliver no benefits to the developer if they still
 have to reason about fine-grained causal dependencies to guarantee
 convergence, such as in the case of Fig.~\ref{fig:crdt-exec-2}. As we
@@ -281,6 +281,7 @@ hence are in agreement.
   \caption{Executions demonstrating the difference between linearized
   (former) and concurrent (latter) merges.}
 \label{fig:mrdt-execs-2}
+\vspace*{-0.25in}
 \end{figure}
 
 \noindent\paragraph{Well-formed executions and the \quark runtime}

@@ -3,6 +3,7 @@
     \includegraphics[scale=0.35]{Figures/implementation2}
 \caption{\quark implementation architecture}
 \label{fig:implementation}
+  \vspace*{-0.2in}
 \end{figure}
 
 \section{Implementation}
@@ -17,17 +18,16 @@ in OCaml to their low-level representations in the backing store and
 organizes their well-formed distributed executions.
 Fig.~\ref{fig:implementation} illustrates the overall architecture.
 
-The runtime \quark is a straightforward implementation the of
-distributed machine \quark described in Sec.~\ref{sec:concrete-sem}.
+The implementation of \quark the is a straightforward realization of
+the \quark distributed machine described in Sec.~\ref{sec:concrete-sem}.
 We manifest each component of the state, namely the branch map $B$,
 the value map $N$, and the head map $H$, as a column family (i.e., a
 table) in Scylla. The synchronization needed to linearize merges is
 implemented with help of Scylla's support for conditional updates (CAS
 operations) and expiring columns. The total order among merges is
 enforced with help of \C{Quorum} reads and writes. Each user process
-is assigned its own replica of the RDT.  Replica id is the
-concatenation of its host name, process id, and Unix timestamp.
-Version vectors are realized as associative lists and stored in Scylla
+is assigned its own replica of the RDT.  Version vectors are realized
+as associative lists and stored in Scylla
 as blobs.
 
 One key difference between the formalization and the implementation is
