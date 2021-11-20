@@ -58,7 +58,7 @@ version that includes the updates from either direction. The LCA for
 this merge is simply the last version on the local branch read by the
 user. This merge need not be synchronized as it doesn't alter the LCAs
 between any two branches. The merged value can then returned
-to the user as the result of the write.  Quark's \C{write} is a
+to the user as the result of the write.  \quark's \C{write} is a
 function of type $\texttt{Value} \rightarrow \texttt{Value}$, where
 $\texttt{Value}$ is \C{doc} in the current application.
 
@@ -110,12 +110,12 @@ linearizability constraint on merges would completely eliminate the
 staleness overhead, but the resultant Git-like system fails to
 converge due to anomalous executions described in
 Sec.~\ref{sec:motivation}\footnote{
-  Git admits such anamolous version history graphs where two branches
-  can have the same set of commits and yet differ in their final
-  version. Appendix describes two such cases we observed on Github}. 
+  Git admits anamolous version history graphs where two branches can
+  have the same set of commits and yet differ in their final version.
+  Appendix describes two such cases we observed on Github}. 
 
 Our experiments bring to the fore an inherent tradeoff among the
-competing concerns of RDTs, namely (\rom{1}). The ease of achieving
+competing concerns of RDTs, namely (\rom{1}). The ease of programming
 convergence, (\rom{2}) Latency, and (\rom{3}).  Staleness. While CRDTs
 try to optimize for latency and staleness, they require a significant
 amount of development and verification effort to be expended to ensure

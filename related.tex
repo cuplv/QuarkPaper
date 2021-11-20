@@ -1,0 +1,54 @@
+\section{Related Work}
+\label{sec:related}
+
+The idea of state-based replicated data types with three-way merge
+functions was first proposed by Kaki et. al. in~\cite{mrdt},
+where authors demonstrate an approach for deriving merge functions
+from first principles for various data types. However, the resultant
+\emph{mergeable replicated data types} (MRDTs) were never proved to be
+convergent. As we demonstrate for the \C{Set} data type in
+Sec.~\ref{sec:motivation}, simple merge functions with intuitive merge
+semantics can nonetheless lead to divergent executions. The \quark
+preempts such executions to guarantee convergence on MRDTs.
+
+Concurrent Revisions~\cite{BBL+10} proposes versioned state for
+shared-memory concurrent programs in order to guarantee determinism.
+The fork-join concurrency they consider is however too restrictive for
+the asynchronous distributed setting where replicas do not have a
+single coherent view of the system state.  Furthermore the
+hierarchical organization of the concurrent actors with a designated
+\emph{server} is inconsistent with the fully-decentralized model of
+execution adopted by several collaborative applications.
+
+State-centric replication was also explored in the context of
+CRDTs~\cite{crdts}. However, such state-based CRDTs require the
+replicated state to be organized as a lattice with the merge function
+acting as as a least upper bound operator. We eliminate this
+restriction in our setting with help of the \quark runtime. A thorough
+comparison of our approach with the operation-based CRDTs can be found
+in Secs.~\ref{sec:introduction} and~\ref{sec:motivation}.
+
+Several verification techniques, program analyses, and tools have been
+proposed to reason about the program behavior in a weakly-consistent
+distributed setting~\cite{bailis-vldb, alvaro-calm,
+gotsman-popl16,redblue-atc, redblue-osdi, ecinec}. These techniques
+treat replicated storage as a black box with a fixed pre-defined
+consistency models. The focus is on assigning appropriate consistency
+levels to operations so as to preserve application integrity. Such an
+approach results in assigning sequential consistency (SC) to all
+operations since the next weaker consistency model -- causal
+consistency, is insufficient to guarantee convergence (as
+Sec.~\ref{sec:motivation} demonstrates). Conversely, \quark cannot
+reason about application-level invariants, such as $\C{balance}\ge 0$
+in an banking application. Thus both approaches confer complimentary
+benefits on application developers.
+
+Finally, the implementation of \quark bears resemblance to
+Quelea~\cite{pldi15}. Both these systems are implemented as shim
+layers on top of off-the-shelf distributed stores, and both offload
+low-level concerns to the underlying store. However, both these
+systems serve orthogonal purposes. Quelea enforces high-level
+invariants on applications built with CRDTs. Operations are assumed to
+be commutative and applications are assumed to be convergent. In
+contrast, \quark enforces convergence of data types that are otherwise
+not guaranteed to converge.
