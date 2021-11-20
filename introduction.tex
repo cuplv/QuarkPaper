@@ -120,13 +120,13 @@ distributed runtime of RDTs to not synchronize the execution of RDT
 operations. Orchestrating a well-formed convergent execution without
 impacting latency and availability may seem impossible due to the CAP
 theorem~\cite{cap}, but it is not the case in fact. While CAP theorem
-does rule out linearizability, it does not prohibit enforcing weaker
-consistency constraints on distributed executions. Our approach
-exploits this observation by (\rom{1}). Identifying a novel set of
-constraints on distributed executions that guarantee their
-convergence, and (\rom{2}). Localizing such constraints on
-(asynchronously executed) state merges such that per-operation latency
-and system-wide availability remain unaffected.
+does rule out linearizability (as perceived by the user), it does not
+prohibit enforcing weaker consistency constraints on distributed
+executions. Our approach exploits this observation by (\rom{1}).
+Identifying a novel set of constraints on distributed executions that
+guarantee their convergence, and (\rom{2}). Localizing such
+constraints on (asynchronously executed) state merges such that
+per-operation latency and system-wide availability remain unaffected.
 Sec.~\ref{sec:concrete-sem} explains our runtime in detail.
 
 % In fact many CRDTs,

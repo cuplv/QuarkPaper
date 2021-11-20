@@ -1,15 +1,15 @@
 \section{Related Work}
 \label{sec:related}
 
-The idea of state-based replicated data types with three-way merge
-functions was first proposed in~\cite{mrdt}, where authors demonstrate
-an approach for deriving merge functions from first principles for
-various data types. However, the resultant \emph{mergeable replicated
-data types} (MRDTs) were never proved to be convergent. As we
-demonstrate for the \C{Set} data type in Sec.~\ref{sec:motivation},
-simple merge functions with intuitive merge semantics can nonetheless
-lead to divergent executions. The \quark preempts such executions to
-guarantee convergence on MRDTs.
+The idea of replicated data types with three-way merge functions was
+first proposed in~\cite{mrdt}, where authors demonstrate an approach
+for deriving merge functions from first principles for various data
+types. However, the resultant \emph{mergeable replicated data types}
+(MRDTs) were never proved to be convergent. As we demonstrate for
+the \C{Set} data type in Sec.~\ref{sec:motivation}, simple merge
+functions with intuitive merge semantics can nonetheless lead to
+divergent executions. \quark can thus be used with MRDTs to preempt
+such executions and guarantee their convergence.
 
 Concurrent Revisions~\cite{BBL+10} proposes versioned state for
 shared-memory concurrent programs in order to guarantee determinism.
@@ -46,9 +46,8 @@ benefits on application developers.
 Finally, the implementation of \quark bears resemblance to
 Quelea~\cite{pldi15}. Both these systems are implemented as shim
 layers on top of off-the-shelf distributed stores, and both offload
-low-level concerns to the underlying store. However, both these
-systems serve orthogonal purposes. Quelea enforces high-level
-invariants on applications built with CRDTs. Operations are assumed to
-be commutative and applications are assumed to be convergent. In
-contrast, \quark enforces convergence of data types that are otherwise
-not guaranteed to converge.
+low-level concerns to the underlying store. Quelea however enforces
+high-level invariants on applications built with CRDTs. Operations are
+assumed to be commutative and applications are assumed to be
+convergent. In contrast, \quark enforces convergence of data types
+that are otherwise not guaranteed to converge.

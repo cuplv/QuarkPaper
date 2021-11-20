@@ -10,8 +10,8 @@ other approaches, we did not have to build a dedicated replicated data
 type to represent collaboratively-edited documents; an ordinary
 document format extended with a merge operation would suffice. While
 many data structures exist to represent text documents (e.g.,
-ropes~\cite{rope}), we decided to adopt the simplest representation of
-a document as a list of characters. 
+ropes~\cite{boehm95}), we decided to adopt the simplest representation
+of a document as a list of characters. 
 \begin{center}
 \begin{ocaml}
         type doc = char list
@@ -58,9 +58,10 @@ includes the updates from either direction.
 % simply the last version on the local branch read by the user. This
 % merge need not be synchronized as it doesn't alter the LCAs between
 % any two branches. The merged value can then returned to the user as
-% the result of the write.  \quark's \C{write} is a function of type
-$\texttt{Value} \rightarrow \texttt{Value}$, where $\texttt{Value}$ is
-\C{doc} in the current application.
+% the result of the write.
+Thus, \quark's \C{write} is a function of type $\texttt{Value}
+\rightarrow \texttt{Value}$, where $\texttt{Value}$ is \C{doc} in the
+current application.
 
 \begin{figure}[ht]
   \centering
@@ -81,18 +82,19 @@ progressively increase the number of concurrent users editing the
 document from 3 to 60 and measure the impact of the increased
 concurrency on write latency. Fig.~\ref{fig:latency} shows the median
 latency values. As evident from the figure, latency of \quark writes
-constant with the median latency around 0.008s. The maximum latency
-ever measured for a \quark writes is 0.016s. Notably, the latency
-values are an order of magnitude less than the time between
-consecutive edits (0.25s), which lets users see their edits almost
-immediately. Fig.~\ref{fig:latency} also plots the latency values for
-the baseline ``SC'' approach which achieves convergence by
-synchronizing each operation, i.e., executing under strong
-consistency. The SC write latency increases super-linearly with the
-median value of 1.76s for 60 concurrent editors. The maximum latency
-measured for an SC write is 9.02s, which is considerably more than the
-inter-edit latency of 0.25s. The experiment confirms the theory that
-convergence does not come at the cost of latency in \quark.
+remain more-or-less constant with the median latency around 0.008s.
+The maximum latency ever measured for a \quark writes is 0.016s.
+Notably, latency remains an order of magnitude less than the time
+between consecutive edits (0.25s), making it hard to perceive.
+Fig.~\ref{fig:latency} also plots the latency values for the baseline
+``SC'' approach which achieves convergence by synchronizing each
+operation, i.e., executing under strong consistency (SC). The SC write
+latency increases super-linearly with the median value of 1.76s for 60
+concurrent editors. The maximum latency measured for an SC write is
+9.02s, which is considerably more than the inter-edit latency of
+0.25s. The experiment confirms the theory that convergence does not
+come at the cost of latency in
+\quark.
 
 \begin{figure}[ht]
   \centering
@@ -109,10 +111,10 @@ see the changes made by the other user $B$, the changes have to be
 reflected in $A$'s local version, which can only happen through a
 merge operation. Since \quark synchronizes merge operations globally,
 it induces additional delay before $A$ can see $B$'s changes. We call
-this additional delay \emph{staleness} as with progression of time,
-$B$'s version known to $A$ becomes increasingly stale. At the
+this additional delay \emph{staleness} as with the progression of
+time, $B$'s version known to $A$ becomes increasingly stale. At the
 system-level, an increase in staleness effectively delays the
-convergence (but doesn't stop it, as proved by
+convergence (but doesn't preempt it, as proved by
 Theorem~\ref{thm:progress}). To understand the staleness behavior in
 \quark, we repeat the collaborative editing experiment, this time
 measuring the staleness value at every merge. We do this by annotating
@@ -120,7 +122,7 @@ every version $v$ with the timestamp $t$ of its creation time. When
 $v$ is is merged into a remote branch $b$ at a later time $t'$, the
 difference $t' - t$ denotes the staleness of $v$ w.r.t the new version
 on $b$. Multiple such staleness measurements are recorded for each
-experiment and analyzed to compute the 10th, 50th, and 90th percentile
+experiment to compute the 10th, 50th, and 90th percentile
 values. Fig.~\ref{fig:staleness} shows the results. While
 staleness remains in the order of milliseconds with fewer ($\leq 9$)
 concurrent users, it increases super-linearly as we increase the
