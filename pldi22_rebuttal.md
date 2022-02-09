@@ -61,18 +61,18 @@ Evaluation
 
 We have chosen to do one in-depth case study instead of experimenting
 with a collection of RDTs as it lets us examine the tradeoffs more
-closely. All the MRDT benchmarks from Kaki et al continue to work on
-Carmot with no increase in latency and diff size measurements. Carmot
-is in fact a fork of Quark -- the system from Kaki et al. Carmot
-extends Quark with an more efficient network and storage layer (due to
-Scylla), and a runtime component that is activated only during a merge
-(happens in a background thread). **It is important to note that
-Carmot does not introduce any additional overhead on a user action to
-guarantee convergence**. When a user submits an action, it is
-immediately executed and committed to the local version. Thus, insofar
-as user interaction is concerned, Carmot is qualitatively no different
-from any other CRDT system. Unfortunately, we couldn't find a
-standardized CRDT system (akin to Quark for MRDTs) for us to do
+closely. All the MRDT benchmarks from Kaki et al [13] continue to work
+on Carmot with no increase in latency and diff size measurements.
+Carmot is in fact a fork of Quark -- the system from Kaki et al.
+Carmot extends Quark with an more efficient network and storage layer
+(due to Scylla), and a runtime component that is activated only during
+a merge (happens in a background thread). **It is important to note
+that Carmot does not introduce any additional overhead on a user
+action to guarantee convergence**. When a user submits an action, it
+is immediately executed and committed to the local version. Thus,
+insofar as user interaction is concerned, Carmot is qualitatively no
+different from any other CRDT system. Unfortunately, we couldn't find
+a standardized CRDT system (akin to Quark for MRDTs) for us to do
 comparisons against.
 
 It is possible to give theoretical upper bound on staleness in Carmot.
@@ -84,7 +84,6 @@ Hence if we have replicas distributed across US-east and US-west, it
 is reasonable to expect staleness to be in the order of 100ms. As it
 stands now, our implementation simply reflects our formal model, which
 includes no such optimizations. 
-
 
 Lastly, we'd like to point out that this work introduces staleness as
 a novel tradeoff against convergence. While trading off staleness may
