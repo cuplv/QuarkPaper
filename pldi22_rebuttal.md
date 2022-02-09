@@ -30,8 +30,12 @@ DAG are organized as a lattice, which gives us the unique LCA property
 (Lemma 3.4), and thereby convergence (Theorem 3.7). The reasoning
 about LCAs is critical to convergence, and cannot be done away with.
 We use synchronization to perform the the checks on LCAs, which inturn
-guarantees convergence. Otherwise synchronization in itself doesn't
-guarantee convergence.
+guarantees convergence. Otherwise synchronization in itself is not
+very useful.
+
+Conversely, synchronization is not necessarily an antithesis to
+practical adoption. Google docs, for instance, famously relies on a
+centralized OT server to coordinate all its edits.
 
 Comparison with MRDTs and CRDTs
 --------------------------------
@@ -79,10 +83,16 @@ staleness is the sum of latencies on the circumference of the ring.
 Hence if we have replicas distributed across US-east and US-west, it
 is reasonable to expect staleness to be in the order of 100ms. As it
 stands now, our implementation simply reflects our formal model, which
-includes no such optimizations.  Lastly, we'd like to note that there
-exist real distributed applications that make use of synchronization
-in practice. Google docs, for instance, relies on a centralized OT
-server to coordinate all its edits yet remains usable.
+includes no such optimizations. 
+
+
+Lastly, we'd like to point out that this work introduces staleness as
+a novel tradeoff against convergence. While trading off staleness may
+not be an optimal choice for every application, the fact that there
+exists such a tradeoff is, in our opinion, noteworthy. And if an
+application has to chose between latency and staleness, staleness is
+arguably the less disruptive choice.
+
 
 Reviewer A
 ----------
