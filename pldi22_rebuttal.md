@@ -20,7 +20,7 @@ objectives. For e.g:
 3. Merges are synchronized with each other; each merge is aware of,
    and has all the information from, the previous merges: this would
    linearize merges *in time*, but nonethless results in ill-formed
-   histories that violate property (c). Fig e.g., in Fig.5(b) merges
+   histories that violate property (c). For e.g., in Fig.5(b) merges
    could be ordered linearly in time, yet result in divergence.
 
 As summarized by Reviewer B, our key discovery is the well-formedness
