@@ -114,9 +114,9 @@ Reviewer B
 * Useful merge functions exist for more complicated data structures.
   In [13] Kaki et al provide a constructive definition of well-formed
   merges with help of *relational decomposition*. Albeit
-  computationally inefficient, relational decomposition leads to
-  simple yet useful merges for a range of data structures. The
-  problem, however, is that [13] lacks either a system or a proof that
+  asymptotically sub-optimal, relational decomposition leads to simple
+  yet useful merges for a range of data structures. The problem,
+  however, is that [13] lacks either a system or a proof that
   guarantees the convergence of resultant MRDTs. We show that
   divergence is possible despite a sensible merge semantics, and close
   this gap.
@@ -124,18 +124,20 @@ Reviewer B
 * Git acknowledges the possibility of multiple LCAs in its
   [documentation](https://git-scm.com/docs/merge-strategies). The
   default merge strategy of Git is `recursive`, which recursively
-  merges LCAs if there are multiple of them. They admit that this is
-  merely a heuristic. We have found a pathological case where such
-  recursive merging could be a problem (Full example with
-  illustrations included in the appendix). We haven't contacted the
-  Git maintainers yet. 
+  merges LCAs if there are multiple of them. This however merely a
+  heuristic. We have found a pathological case where such recursive
+  merging could become a problem (Full example with illustrations
+  included in the appendix).
+  [Others](http://r6.ca/blog/20110416T204742Z.html) have also found
+  cases where Git merge is inconsistent. We haven't contacted the Git
+  maintainers yet. 
 
 
 Reviewer C
 ----------
 
-* We hope your concerns on staleness and performance are addressed by
-  our note on Evaluation above.
+* We hope the reviewer's concerns on staleness and performance are
+  addressed by our note on Evaluation above.
 
 Reviewer D
 -----------
