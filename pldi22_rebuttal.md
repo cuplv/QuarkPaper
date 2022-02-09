@@ -4,32 +4,34 @@ concerns first, followed by reviewer-specific comments.
 Use of Synchronization
 ----------------------
 
-Merges in Carmot use synchronization. However, synchronization does
-not trivially guarantee convergence. Our contribution is to show
-*how* to use synchronization in a way that (a). Replicas are always
-available for user actions, (b). No user action has to wait for a
-remote replica to respond, and (c). Replicas eventually converge. To
-demonstrate the subtlety in our use of synchronization, consider the
-following trivial synchronizations:
+While merges in Carmot use synchronization, it is only one aspect of
+our overall approach. Our contribution is to show *how* to use
+synchronization in a way that (a). Replicas are always available for
+user actions, (b). No user action has to wait for a remote replica to
+respond, and (c). Replicas eventually converge. There are several ways
+one could use synchronization yet fail to achieve the aforementioned
+objectives. For e.g:
 
-1. Each operation is synchronized -- the system would violate
-   aforementioned properties (a) and (b).
-2. Merges ``stop the world'' to pull the latest version from all the
-   branches -- violates properties (a) and (b) as no replica can
-   progress when one replica is merging.
-3. Only merges are synchronized; each merge is aware of, and has all
-   the information from, the previous merges -- this would linearize
-   merges *in time*, but nonethless results in ill-formed histories
-   that violate property (c). Fig e.g., in Fig.5(b) merges could be
-   ordered linearly in time, yet result in divergence.
+1. Each user operation is synchronized: this leads to violation of
+   properties (a) and (b).
+2. Merges synchronize by ``stoping the world'' to pull the latest
+   version from all the branches. This too violates properties (a) and
+   (b) as no replica can progress when one replica is merging.
+3. Merges are synchronized with each other; each merge is aware of,
+   and has all the information from, the previous merges: this would
+   linearize merges *in time*, but nonethless results in ill-formed
+   histories that violate property (c). Fig e.g., in Fig.5(b) merges
+   could be ordered linearly in time, yet result in divergence.
 
-Our key discovery is the LCA-based premise of Merge and FastFwd
-rules that effectively ensure that LCAs in any history are organized
-as a lattice. This inturn is based on our observation that multiple
-LCAs inevitably lead to divergence in general case. We use
-synchronization to enable the checks on LCAs and enforce the lattice
-property (Corollary 3.6). Otherwise Synchronization in itself doesn't
-constitute the solution.
+As summarized by Reviewer B, our key discovery is the well-formedness
+condition that translates to LCA-based premises of Merge and FastFwd
+rules. These conditions effectively ensure that LCAs in any history
+DAG are organized as a lattice, which gives us the unique LCA property
+(Lemma 3.4), and thereby convergence (Theorem 3.7). The reasoning
+about LCAs is critical to convergence, and cannot be done away with.
+We use synchronization to perform the the checks on LCAs, which inturn
+guarantees convergence. Otherwise synchronization in itself doesn't
+guarantee convergence.
 
 Comparison with MRDTs and CRDTs
 --------------------------------
@@ -40,12 +42,15 @@ merges [13] nonetheless result in divergence. For e.g., our
 in divergence as shown in Figs.4(b) and 5(b). The existence of these
 counterexamples is in fact why they were not able to prove MRDT
 convergence (source: personal communication). While convergence is
-only a small aspect of full-functional correctness, ensuring it in the
-context of CRDTs and MRDTs remains extremely challenging even for the
-experts
-([here](https://twitter.com/martinkl/status/1327025979454263297?lang=en)
-is a recent example from CRDTs).  We hope our formal guarantees of
-convergence would make RDTs accessible to non-experts.
+only a small aspect of full-functional correctness, getting it right
+is not easy, even for the experts
+([Here](https://twitter.com/martinkl/status/1327025979454263297?lang=en)
+is a recent example from CRDTs. Another example is the queue
+persistent data structure from [Farinier et
+al](https://hal.inria.fr/hal-01099136v1/document), which turned out to
+admit the multiple LCA anomaly and (thereby) divergence). We hope
+our formal guarantees help the community advance the discussion on
+RDTs past convergence.
 
 Evaluation
 ------------
@@ -57,26 +62,27 @@ Carmot with no increase in latency and diff size measurements. Carmot
 is in fact a fork of Quark -- the system from Kaki et al. Carmot
 extends Quark with an more efficient network and storage layer (due to
 Scylla), and a runtime component that is activated only during a merge
-(happens in a background thread). **There is no additional overhead
-associated with a user action**. When a user submits an action, it is
+(happens in a background thread). **It is important to note that
+Carmot does not introduce any additional overhead on a user action to
+guarantee convergence**. When a user submits an action, it is
 immediately executed and committed to the local version. Thus, insofar
 as user interaction is concerned, Carmot is qualitatively no different
 from any other CRDT system. Unfortunately, we couldn't find a
 standardized CRDT system (akin to Quark for MRDTs) for us to do
 comparisons against.
 
-It is possible to give theoretical upper bound on staleness in
-Carmot. Ring topology guarantees the uniqueness of LCAs (Lemma 3.4) by
-construction (without a need for synchronization). If replicas are
-organized as a ring, the maximum staleness is the sum of latencies on
-the circumference of the ring. Hence if we have replicas distributed
-across US-east and US-west, it is reasonable to expect staleness to be
-in the order of 100ms. As it stands now, our implementation simply
-reflects our formal model, which includes no such optimizations.
-Lastly, we'd like to note that mere presence of synchronization doesn't
-necessarily lead to unacceptable performance. Google docs, for
-instance, relies on a centralized OT server to coordinate all its
-edits and yet has acceptable performance.
+It is possible to give theoretical upper bound on staleness in Carmot.
+We have proved (elsewhere) that a ring topology guarantees the
+uniqueness of LCAs by construction without a need for global
+synchronization. If replicas are organized as a ring, the maximum
+staleness is the sum of latencies on the circumference of the ring.
+Hence if we have replicas distributed across US-east and US-west, it
+is reasonable to expect staleness to be in the order of 100ms. As it
+stands now, our implementation simply reflects our formal model, which
+includes no such optimizations.  Lastly, we'd like to note that there
+exist real distributed applications that make use of synchronization
+in practice. Google docs, for instance, relies on a centralized OT
+server to coordinate all its edits yet remains usable.
 
 Reviewer A
 ----------
@@ -101,9 +107,18 @@ Reviewer B
   computationally inefficient, relational decomposition leads to
   simple yet useful merges for a range of data structures. The
   problem, however, is that [13] lacks either a system or a proof that
-  guarantees the convergence of resultant MRDTs. As demonstrated
-  above, divergence is possible despite a sensible merge semantics.
-  Carmot closes this gap.
+  guarantees the convergence of resultant MRDTs. We show that
+  divergence is possible despite a sensible merge semantics, and close
+  this gap.
+
+* Git acknowledges the possibility of multiple LCAs in its
+  [documentation](https://git-scm.com/docs/merge-strategies). The
+  default merge strategy of Git is `recursive`, which recursively
+  merges LCAs if there are multiple of them. They admit that this is
+  merely a heuristic. We have found a pathological case where such
+  recursive merging could be a problem (Full example with
+  illustrations included in the appendix). We haven't contacted the
+  Git maintainers yet. 
 
 
 Reviewer C
@@ -120,12 +135,12 @@ Reviewer D
   30 branches with 30 replicas distributed across 3 machines.
 
 * Inclusion of a runtime imposes no additional overhead on the latency
-  of individual operations. Given that Carmot runtime uses
-  synchronization for merges, and the overhead of synchronization
-  increases at least linearly with the number of replicas, one would
-  expect the latency of each operation to grow at least linearly if it
-  is affected by the presence of runtime. However, as Fig.10
-  demonstrates, that's not the case. Hence the conclusion that our
+  of individual operations. Given that Carmot uses synchronization for
+  merges, and the overhead of synchronization increases at least
+  linearly with the number of replicas, one would expect the latency
+  of each operation to grow at least linearly *if* the runtime
+  interferes with the normal execution. Fig.10 categorically
+  demonstrates that this is not the case. Hence the conclusion that our
   approach imposes no additional cost on latency and availability (our
   latency measurement accounts for availability too as it measures the
   time from the operation is submitted to the time a result is
@@ -133,5 +148,27 @@ Reviewer D
   operations have to wait longer to find a replica, increasing their
   overall latency. Fig.10 shows this is not the case with Carmot.)
 
-* We hope your other comments on performance are addressed by our note
-  on Evaluation above.
+* Being based on MRDTs, our approach *is* indeed comparable to CRDTs.
+  The absence of synchronization in CRDTs is a result of careful
+  engineering by domain experts [20, 25, 26, 11]. In the absence of
+  such expertise, the only alternative available to an application
+  developer is to synchronize every operation. Our approach presents a
+  third alternative -- a compromise where developer need not
+  synchronize every operation, yet obtain convergence. 
+
+* Our claim in contribution bullet #2 pertains to the formalization of
+  the abstract machine and the theorems we prove on it. Mechanization
+  in Ivy, similar to mechanization in Coq, is intended to convey the
+  confidence in the soundness of our meta-theory. Our Ivy development
+  very closely resembles our formalization in Sections 3 and 4
+  (including the theorems). Lemmas 3.4 to 3.8 have been proved in Ivy.
+  In addition, we also proved that the concrete semantics of Sec. 4
+  refine the abstract semantics of Sec. 3. While Sledgehammer extends
+  an interactive proof assistant (Isabelle/HOL) with SMT support, our
+  mechanized verification in Ivy is wholly SMT-driven; there is no
+  interactive theorem proving involved (we have separately done manual
+  proofs however). We shall include more details on Ivy formalization,
+  and the comparison with Sledgehammer approach in the final version.
+
+* We hope your questions on merge synchronization are answered by the
+  note on Evaluation above.
