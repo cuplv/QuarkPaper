@@ -186,26 +186,6 @@ inevitable unless every pair of \C{add} and \C{remove} operations are
 synchronized, which, regrettably, is not a practical option. The
 developer therefore seems to be stuck.
 
-\noindent\paragraph{Key observations guiding the solution}
-Fortunately, there is a way out of this problem and the solution
-requires a switch in the perspective of replication from an
-operation-centric view characterized by explicit effects to a
-state-centric view characterized by explicit state merges. The
-motivation for this switch is the key observation that it is possible
-to induce an ordering over \emph{states} of replicas even as their
-operations and effects remain unordered, as long as such states are
-\emph{mergeable}. The ordering is enforced by synchronizing merges in
-the background while the replica-local execution progresses
-unhindered. Consequently, eventual convergence can be guaranteed
-\emph{without} impacting the user-perceived latency of the operations.
-Moreover, working with states instead of operations frees the latter
-from having to conform to algebraic laws such as commutativity.  Put
-together, this means that the clients of a replicated data type can
-perform any action allowed by the sequential version of the type and
-immediately see the results of their actions on the local replica
-while being safe in the knowledge that replica states will eventually
-converge.
-
 \begin{figure}[ht]
   \centering
   \begin{subfigure}[t]{0.55\columnwidth}
@@ -223,14 +203,16 @@ state-centric replication model. Dashed lines now denote state merges.}
 \label{fig:mrdt-execs}
 \end{figure}
 
-\noindent\paragraph{A Mergeable Replicated Set} To demonstrate the
-aforementioned intuitions we reconsider the executions from
-Fig.~\ref{fig:crdt-execs}, this time in the state-centric replication
-model. The cornerstone of the state-centric model is a three-way
-\C{merge} function that merges concurrent versions of the state in
-presence of their (lowest) common ancestor version. In our running
-example, the state is a value of type \C{Set.t}, hence \C{Set.merge}
-function would have the type signature:
+\noindent\paragraph{The MRDT Approach} Mergeable Replicated Data Types
+(MRDTs) implement a state-centric model of replication that is
+inspired by the Git version control system. Like in Git, the state
+evolves in terms of versions, and concurrent versions of the state can
+be merged. The semantics of merge depends on the type of the state, so
+each MRDT is required to be equipped with a three-way \C{merge}
+function that merges concurrent versions of that type in presence of
+their (lowest) common ancestor version. In our running example, the
+state is a value of type \C{Set.t}, hence \C{Set.merge} function would
+have the type signature:
 \begin{center}
 \C{Set.merge} : \C{Set.t} $\rightarrow$ \C{Set.t} $\rightarrow$ \C{Set.t}
 $\rightarrow$ \C{Set.t}
@@ -246,14 +228,21 @@ any newly added elements in either versions. Concretely:
   let merge s(*lca*) s1 s2 = 
               (s1 $\cap$ s2) $\cup$ (s1 - s) $\cup$ (s2 - s)
 \end{ocaml}
-Equipped with the above set merge function, we can now consider the
-equivalent execution of Fig.~\ref{fig:crdt-exec-1} in state-centric
-model. The execution is shown in Fig.~\ref{fig:mrdt-exec-1}. The
-initial version on all three replicas ($v_0$) is the singleton set
+Extending \C{Set} ADT with the above merge function results in a
+\C{Set} MRDT.
+
+Let us now reconsider the executions in Fig.~\ref{fig:crdt-execs},
+this time on \C{Set} MRDT. The equivalent executions are shown in
+Fig.~\ref{fig:mrdt-execs}. Due to causal consistency being built into
+the model, the divergent execution of Fig.~\ref{fig:crdt-exec-1} is
+preempted in favor of the convergent execution shown in
+Fig.~\ref{fig:mrdt-exec-1}. The execution manifests as follows.  The
+initial version ($v_0$) on all three replicas  is the singleton set
 $\{e\}$. Applying operations to replicas creates new versions, e.g.,
-$v_1$ on $R_3$, and $v_2$ and $v_3$ on $R_2$. Changes can be propagated by merging versions, e.g.,
-version $v_2$ on $R_2$ is a result of merging $v_1$ into $v_0$ for
-which $v_0$ serves as the lowest common ancestor (LCA)
+$v_1$ on $R_3$, and $v_2$ and $v_3$ on $R_2$. Changes can be
+propagated by merging versions, e.g., version $v_2$ on $R_2$ is a
+result of merging $v_1$ into $v_0$ for which $v_0$ serves as the
+lowest common ancestor (LCA)
   \footnote{Versions $v_0$ and $v_1$ are not concurrent as the
   former is an ancestor of the latter. Merging $v_1$ into $v_0$ is
   nonetheless possible as $v_1$ is ahead of $v_0$ in causal order. In
@@ -314,9 +303,9 @@ However, all linearizations result in the same final state $\{e\}$.
 Another important point to note is that only the merges are
 linearized; not the entire execution. In Fig.~\ref{fig:mrdt-exec-3},
 both $R_1$ and $R_2$'s \C{remove}s remove the same element $e$, which
-is not possible in a linearized execution. Leaving the execution
-unconstrained is crucial to satisfy the limits imposed by the CAP
-theorem on a highly-available partition-tolerant distributed system.
+is not possible in a linearized execution. %Leaving the execution
+%unconstrained is crucial to satisfy the limits imposed by the CAP
+%theorem on a highly-available partition-tolerant distributed system.
 
 In the context of Fig.~\ref{fig:mrdt-exec-3}, it is quite clear what
 linearization of merges means and how to enforce it via
@@ -332,30 +321,30 @@ changes. The merges can be ordered in time as following: first $R_2
 (merging $v_2$ and $v_3$ resp.), then $R_3 \rightarrow R_4$ (merging
 $v_3)$, and finally $R_2 \rightarrow R_4$ (merging $v_1$). These
 merges collectively propagate the effects of \C{add} and \C{remove}
-operations to $R_1$ and $R_2$. And despite being ordered in time, the
+operations to $R_1$ and $R_2$. And despite being ordered in time,
 they nonetheless result in a divergent execution ($v_5 \neq v_7$). The
 problem here is that, although merges are executed linearly, the
-execution graph does not reflect this linearity; merges of that end in
+execution graph does not reflect this linearity; merges that end in
 $R_1$ in Fig.~\ref{fig:mrdt-exec-4} are effectively concurrent with
 those that end in $R_4$. This shows that simply synchronizing the
-execution of merges does not necessarily result in convergence.
+execution of merges does \emph{not} result in convergence.
 
-Our key insight to overcome this impasse is a \emph{well-formedness}
+Our key insight to overcome this impasse is a novel \emph{well-formedness}
 condition on execution graphs that ensures convergence of final
 states. To understand well-formedness, let us contrast the bad
 executions in Figs.~\ref{fig:mrdt-exec-2} and~\ref{fig:mrdt-exec-4}
 against the good execution in Fig.~\ref{fig:mrdt-exec-3}. Observe that
-in Fig.~\ref{fig:mrdt-exec-2}, \emph{every} pair of concurrent
+in Fig.~\ref{fig:mrdt-exec-3}, \emph{every} pair of concurrent
 versions on $R_1$ and $R_2$ have a unique lowest common ancestor
-(LCA). For instance, LCA of $(v_5,v_6)$ is $v_6$, $(v_5,v_4)$ is
+(LCA). For instance, LCA of $(v_5,v_6)$ is $v_5$, $(v_5,v_4)$ is
 $v_3$, $(v_1,v_2)$ is $v_0$ and so on. By contrast in
 Fig.~\ref{fig:mrdt-exec-2}, versions $v_5$ and $v_6$ have two LCAs,
 namely $v_2$ and $v_3$. Both these versions are common ancestors of
 $v_5$ and $v_6$, and both are \emph{lowest} in the sense that there do
 not exist versions lower (in the execution graph) than $v_2$ and $v_3$
 that are also common ancestors of $v_5$ and $v_6$. Likewise in
-Fig.~\ref{fig:mrdt-exec-4}, versions $v_7$ and $v_9$ have two LCAs --
-$v_2$ and $v_4$. Multiple LCAs is an indication that there exist
+Fig.~\ref{fig:mrdt-exec-4}, versions $v_6$ and $v_8$ have two LCAs --
+$v_1$ and $v_3$. Multiple LCAs is an indication that there exist
 merges prior in the execution graph that are effectively concurrent.
 Considering that our approach to convergence in state-centric model
 crucially relies on linearity of merges, presence of multiple LCAs

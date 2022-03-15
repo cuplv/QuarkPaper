@@ -9,31 +9,30 @@
 \section{Implementation}
 \label{sec:implementation}
 
-We realize a prototype of \quark runtime as a lightweight shim layer
-on top of Scylla -- an off-the-shelf distributed data
+We realize a prototype of \quark runtime for MRDTs as a lightweight
+shim layer on top of Scylla -- an off-the-shelf distributed data
 store~\cite{scylla}. We rely on Scylla for inter-replica
 communication, data replication, persistence, and fault tolerance.
-\quark translates the high-level mergeable data type implementations
-in OCaml to their low-level representations in the backing store and
-organizes their well-formed distributed executions.
+\quark translates the high-level MRDT implementations in OCaml to
+their low-level representations in the backing store and orchestrates
+their well-formed distributed executions.
 Fig.~\ref{fig:implementation} illustrates the overall architecture.
 
-The implementation of \quark the is a straightforward realization of
-the \quark distributed machine described in Sec.~\ref{sec:concrete-sem}.
+The implementation of \quark is a straightforward realization of the
+\quark distributed machine described in Sec.~\ref{sec:concrete-sem}.
 We manifest each component of the state, namely the branch map $B$,
 the value map $N$, and the head map $H$, as a column family (i.e., a
 table) in Scylla. The synchronization needed to linearize merges is
 implemented with help of Scylla's support for conditional updates (CAS
 operations) and expiring columns. The total order among merges is
 enforced with help of \C{Quorum} reads and writes. Each user process
-is assigned its own replica of the RDT.  Version vectors are realized
-as associative lists and stored in Scylla
-as blobs.
+is assigned its own replica of the MRDT.  Version vectors are realized
+as associative lists and stored in Scylla as blobs.
 
 One key difference between the formalization and the implementation is
-in the treatment of RDT values. Formalization assumes values to be
-atomic with no sharing in between them. In practice, however, an RDT
-value could be a linked data structure such as a binary tree, and two
+in the treatment of MRDT values. Formalization assumes values to be
+atomic with no sharing in between them. In practice, however, an MRDT
+could be a linked data structure such as a binary tree, and two
 such values could share a significant amount of internal structure.
 Consequently, the size of the \emph{diff} between two consecutive
 versions of a value could be asymptotically less then the size of the

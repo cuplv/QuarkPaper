@@ -88,7 +88,9 @@ $H_i$ and $B_i$. For e.g., $H_i[b_i \mapsto t]$ updates the head of
 branch $b_i$ to $t$ on replica $i$.  Since $H_i$ is simply an
 abbreviation of $H\;i$ in the formalism, $H_i[b_i \mapsto t]$ actually
 expands to $H_i[i \mapsto b_i \mapsto t]$. We exploit this notation in
-Fig.~\ref{fig:quark-semantics}. 
+Fig.~\ref{fig:quark-semantics}. We let $\delta_{\odot}$ denote the
+initial concrete state which is defined on the similar lines as the
+initial abstract state (Def.~\ref{def:init-state}).
 % When two replicas, $i$ and $j$, are involved in an update, e.g.,
 % \rulelabel{Fork}, we write $H_{\tuplee{i,j}}[b_j \mapsto t]$ to mean
 % $H[i \mapsto b_j \mapsto t][j \mapsto b_j \mapsto t]$.
@@ -150,12 +152,26 @@ from $k$, i.e., $H_j(b_k)$ happens to be ahead of $H_i(b_k)$. The new
 versions on $b_k$ known to $j$ but not $i$ are then simply replicated
 at $i$.
 
-\paragraph{Properties} The Unique LCA
-(Lemma~\ref{lem:lca-uniqueness}), Convergence
-(Theorem~\ref{thm:convergence}, and Progress
-(Theorem~\ref{thm:progress}) properties have been re-defined for the
-\quark distributed machine and automatically proven correct in
-Ivy~\cite{ivy}. 
+\paragraph{Refinement} The following theorem asserts that the \quark
+distributed machine refines the abstract machine described in
+Sec.~\ref{sec:abstract-sem}:
+\begin{theorem}[{\bf Refinement}]
+  \label{thm:refinement}
+  There exists a refinement relation $R$ relating abstract and
+  concrete states such that:
+  \begin{itemize}
+    \item $R$ relates initial abstract and concrete states, i.e.,
+      $R(\Delta_{\odot},\delta_{\odot})$.
+    \item Forall $\delta,\delta',\Delta$, if $R(\delta,\Delta)$ and
+      $\delta \qstepsto \delta'$, then there exists a $\Delta'$ such
+      that $\Delta \stepsto \Delta'$ and $R(\delta',\Delta')$.
+  \end{itemize}
+\end{theorem}
+The proof is done in Ivy. The refinement relation $R$ essentially
+relates the version vectors of concrete semantics to the version
+histories of abstract semantics. A \emph{happens-before} relation has
+been defined as a ghost state in concrete semantics to help us
+establish the refinement relation in Ivy.
 
 \paragraph{Garbage Collection} One downside of the distributed
 semantics in Fig.~\ref{fig:quark-semantics} is that maps $B$ and $N$
