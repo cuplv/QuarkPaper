@@ -1,7 +1,7 @@
 \section{Evaluation}
 \label{sec:eval}
 
-In this section we present an emperical evaluation of \quark on two
+In this section we present an empirical evaluation of \quark on two
 case studies. First is a collaborative document editing
 application -- a common usecase addressed by several CRDT
 proposals~\cite{rga, treedoc, crdts}. Second is a replicated key-value
@@ -42,51 +42,35 @@ speed of humans. Each edit is immediately persisted to the disk by
 creating a new version in the backing store. Thus there are at least
 as many versions of the document as there are edits. Such extensive
 versioning may be considered excessive in practice and could be
-disabled. Each user process runs a \quark thread that commits
-user-generated document versions to the local branch, while
-merging with the concurrent versions from the remote branches in the
-background. Each merge is synchronized as described in previous
-sections.
-
-\quark's background merges however pose a new problem as they create
-new versions on the local branch in the background while the user is
-busy editing an older version. When the user attempts to write their
-version of the document to the store, simply committing it would
-effectively override the concurrent updates from other users obtained
-via background merges. The solution, fortunately, is straightforward:
-we \emph{merge} the user-submitted value with the (value of) the
-latest version on the local branch to create a new version that
-includes the updates from either direction. Since this merge is fully
-confined to the local replica, it is guaranteed to not affect the LCA
-of the local branch with respect to a remote branch. To the external
-world, it appears as if the local branch has simply committed a new
-version.
-% The LCA for this merge is
-% simply the last version on the local branch read by the user. This
-% merge need not be synchronized as it doesn't alter the LCAs between
-% any two branches. The merged value can then returned to the user as
-% the result of the write.
-Thus, \quark's \C{write} is a function of type $\texttt{Value}
-\rightarrow \texttt{Value}$, where $\texttt{Value}$ is \C{doc} in the
-current application.
+disabled. 
 
 \noindent\paragraph{Latency} To measure the impact of \quark runtime on user
 writes, we measure the latency of the \C{write} operation, which
 includes the time spent merging the user version with the current
 version, and persisting the resultant version to the store. We conduct
-the experiments on a three-node cluster of \C{i3.large} machines in
-Amazon \C{us-west2} data center. Each user connects to one of the
-machines, forks a new branch, and performs 1000 edits in succession,
-saving the document after each edit. We progressively increase the
-number of concurrent users editing the document from 3 to 200 and
-measure the impact of the increased concurrency on write latency.
-Fig.~\ref{fig:latency} shows the 10th, 50th (median), and 90th
-percentile latency values. The median and 10th percentile latencies
-remain more-or-less constant with a slight increase between 3 and 60
-concurrent users. This demonstrates that \quark has negligible effect
-on the per-operation latency, which is expected. The 90th percentile
-latency, however, shows no clear pattern by the virtue of being more
-susceptible to transient system conditions. Nonetheless, the maximum
+the experiments on a three-node cluster of \C{i3.large} machines
+located in Amazon \C{us-west2} data center. Each user connects to one
+of the machines, forks a new branch, and performs 1000 edits in
+succession, saving the document after each edit. We progressively
+increase the number of concurrent users editing the document from 3 to
+60 and measure the impact of the increased concurrency on write
+latency.  Fig.~\ref{fig:latency} shows the 10th, 50th (median), and
+90th percentile latency values. The median and 10th percentile
+latencies remain more-or-less constant with a slight increase between
+3 and 60 concurrent users. This is expected considering that \quark
+does not constrain the execution of user operations. The slight
+increase, we confirmed, is due to the increased latency of concurrent
+database writes. The 90th percentile latencies, however, show an
+initial increase before adopting a pattern similar to median
+latencies. We attribute this behavior to an idiosyncrasy of our
+multi-threading implementation, which is more likely to affect
+measurements at the extreme. In particular, we use OCaml v4.12
+extended with Lightweight Threads (LWT) library, which offers
+concurrency but not parallelism.  At lower number of replicas, the
+merge thread's lock requests succeed more often, resulting in the
+process spending more time merging than editing. We expect this
+pattern to smoothen out in OCaml v5.0, which introduces true
+multi-core parallelism. Notwithstanding this idiosyncrasy, the maximum
 value of 90th percentile latency measured (32ms) remains well below
 the the time between consecutive edits (0.25s), making it hard to
 perceive by a human user. 
@@ -96,8 +80,8 @@ perceive by a human user.
     \includegraphics[scale=0.4]{Figures/monkey_latency}
 \caption{Latency of writes to a shared document under \quark. }
 \label{fig:latency}
+\vspace*{-0.2in}
 \end{figure}
-
 
 For comparison against a baseline, we have implemented an ``SC''
 approach which achieves convergence by synchronizing each operation,
@@ -130,7 +114,7 @@ Theorem~\ref{thm:progress}).
 \caption{Staleness increases as the number of concurrent editors
   increase.}
 \label{fig:monkey-staleness}
-  \vspace*{-0.2in}
+% \vspace*{-0.2in}
 \end{figure}
 
 To understand the effect of \quark on
@@ -138,20 +122,19 @@ staleness, we quantify and measure it along with latency in the
 experiment setup described above. Staleness is defined as the time
 taken for a version committed on one replica to be merged into a
 concurrent version on a remote replica. To measure staleness, we
-annotate every version $v$ with the timestamp $t$ of capturing the
-wall clock time of its creation. When $v$ is is merged into a remote
-branch $b$ at a later time $t'$, the difference $t' - t$ denotes the
-staleness of $v$ w.r.t the new version on $b$. One such staleness
-measurement is recorded for every merge that ever happens during the
-experiment. We compute 10th, 50th, and 90th percentiles of staleness
-values thus obtained. Fig.~\ref{fig:monkey-staleness} shows the
-results. As evident, staleness increases steadily with the increasing
-number of concurrent replicas, which is expected considering that
-merges are synchronized, and increasing the number of replicas reduces
-the number of opportunities for a replica to merge. The increase is
-roughly linear in the number of replicas as our implementation passes
-the lock around in a round-robin fashion, thus increasing the lock
-latency in proportion to the number of replicas. Nonetheless, the 90th
+annotate every version $v$ with the timestamp $t$ of the wall clock
+time of its creation. When $v$ is is merged into a remote branch $b$
+at a later time $t'$, the difference $t' - t$ denotes the staleness of
+$v$ w.r.t the new version on $b$. One such staleness measurement is
+recorded for every merge that ever happens during the experiment. We
+compute 10th, 50th, and 90th percentiles of staleness values thus
+obtained. Fig.~\ref{fig:monkey-staleness} shows the results. As
+evident, staleness increases steadily with the increasing number of
+concurrent replicas, which is expected considering that merges are
+synchronized, and increasing the number of replicas reduces the number
+of opportunities for a replica to merge. The increase is roughly
+linear in the number of replicas as our implementation passes the lock
+around in a round-robin fashion. Despite the steady increase, the 90th
 percentile staleness values remain low -- in the order of 100ms with
 the number of replicas under 30, and in the order of 1s with number of
 replicas under 60. While further optimizations might reduce staleness,
@@ -171,35 +154,72 @@ use of synchronized merges to guarantee convergence.
 
 \subsection{Key-Value Store}
 
-We repeat our experiments on a mergeable key-value store application
-we implemented using a Red-Black tree MRDT. Latency results are shown
-in Fig.~\ref{fig:rb-latency}, and staleness results in
-Fig.~\ref{fig:rb-staleness}.
+Our second case study involves a mergeable key-value store, which,
+unlike a text editor, is expected to work in the background supporting
+applications such as e-Commerce. The store is mergeable in the sense
+that it can merge conflicting values assigned to equal keys using
+value-specific merge functions. For instance, an e-Commerce
+application might store shopping carts as values, in which case the
+merge function on shopping carts is used to merge concurrent
+conflicting updates to a user's shopping cart. The key-value store is
+implemented using a Red-Black tree MRDT~\cite{mrdt}, which is a
+standard Red-Black tree implementation extended with a merge function.
+The merge function implements set merge semantics
+(Sec.~\ref{sec:motivation}) for concurrent insertions and deletions of
+keys, and defers to the value merge function for concurrent updates
+against a key. Concretely, \C{RBTree} is an OCaml functor
+parameterized on the \C{Key} and \C{Value} modules, where the latter
+is required to provide a \C{merge} function. We use integer keys and
+mergeable counter values in our experiments.
 
-\begin{figure}[ht]
-  \centering
-    \includegraphics[scale=0.4]{Figures/rbmonkey_latency}
-  \caption{Latency for Key-Value store operations under \quark}
-\label{fig:rb-latency}
-  \vspace*{-0.2in}
-\end{figure}
+% \begin{figure}[ht]
+%   \centering
+%     \includegraphics[scale=0.4]{Figures/rbmonkey_latency}
+%   \caption{Latency of operations on a key-value store implemented
+%   using a Red-Black tree MRDT.}
+% \label{fig:rb-latency}
+%   \vspace*{-0.2in}
+% \end{figure}
 
 \begin{figure}[ht]
   \centering
     \includegraphics[scale=0.4]{Figures/rbmonkey_staleness}
-  \caption{Key-Value store staleness under \quark}
+  \caption{Staleness of key-value store merge operations.}
 \label{fig:rb-staleness}
-  \vspace*{-0.2in}
+% \vspace*{-0.2in}
 \end{figure}
 
+We use the same experimental setup as before -- an increasing number
+of concurrent processes perform a random operation on the local
+version of the tree while merging with the remote versions in the
+background.  Each process forks off a branch with an initial version
+of an \C{RBTree} of size 1000, performs an insertion, updatation, or
+deletion with probabilities of 0.5, 0.25, and 0.25. A new version of
+the tree is committed after each operation. Each process performs 1000
+operations with an inter-operation delay of 100ms. We measure the
+latency of each tree operation and the staleness of each merge.
+Latency measurements follow the same pattern as those for
+collaborative editing (Fig.~\ref{fig:latency}), and have been elided.
+The median latency remains around 50ms for most of the experiment.
+Staleness measurements are plotted in Fig.~\ref{fig:rb-staleness}. As
+before, staleness increases steadily in proportion to the increasing
+number of concurrent processes. The 90th percentile staleness exceeds
+1s for 15 concurrent processes, and 7s for 54 concurrent processes.
+Unlike the collaborative applications, however, the number of replicas
+in a conventional web application tends to be low, which could limit
+staleness to a tolerable range. For instance, in the e-Commerce
+application described above, 3 replicas of the shopping cart can be
+kept in sync with each other with a 90th percentile lag (staleness) of
+30ms.
+
 Our experiments bring to the fore an inherent tradeoff among the
-competing concerns of RDTs, namely (\rom{1}). The ease of programming
-convergence, (\rom{2}) Latency, and (\rom{3}).  Staleness. While CRDTs
+competing concerns of Convergent RDTs, namely (\rom{1}). The ease of
+programming, (\rom{2}) Latency, and (\rom{3}).  Staleness. While CRDTs
 try to optimize for latency and staleness, they require a significant
 amount of development and verification effort to be expended to ensure
-convergence~\cite{kleppmann2017}. In contrast, \quark lets developers
-derive convergent-by-construction RDTs from ordinary data data types
-that are optimized for latency, but incur a staleness overhead that
+convergence. In contrast, \quark lets developers derive
+convergent-by-construction MRDTs from ordinary data types that are
+optimized for latency, but incur a non-trivial staleness overhead that
 delays the time to convergence. 
 
 

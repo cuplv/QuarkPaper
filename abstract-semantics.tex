@@ -61,7 +61,7 @@ $(G,N,C,H,L)$, where:
 %   versions belonging to different branches, albeit denoting the 
 
   \item $N : \texttt{Version} \rightarrow \texttt{Value}$ is a
-    (partial) function (i.e., a map) that mas versions to their
+    (partial) function (i.e., a map) that maps versions to their
     values.  We distinguish versions from values as different versions
     on different branches may store the same value (e.g., the same
     string ``hello''), yet need to be uniquely identified. The domain
@@ -97,7 +97,7 @@ $(G,N,C,H,L)$, where:
 The execution of the abstract machine progresses by adding to the sets
 $V$ and $E$, and updating the maps $N$, $C$, $H$, and $L$. We adopt
 the usual update notation, e.g., $H[b \mapsto v]$ is a map $H'$ such
-that $H'(b) = v$, and forall $b' \neq b$, $H'(b') = H(b')$.  Multiple
+that $H'(b) = v$, and for all $b' \neq b$, $H'(b') = H(b')$.  Multiple
 updates to a map are parsed left-associatively. Map $L$ is assumed to
 be commutative, so $L[(b,b') \mapsto v]$ is equal to $L[(b,b') \mapsto
 v][(b',b) \mapsto v]$; the former is used as a succinct replacement of
@@ -254,7 +254,7 @@ Fig.~\ref{fig:merge-precondition}, which is explained above.
 \begin{lemma}[Commit sets grow monotonically]
   \label{lem:commit-monotonicity}
   In every reachable state $\Delta = ((V,E),N,C,H,L)$ of the abstract
-  machine: Forall $v_1,v_2 \in V$, if $v_1 \reaches v_2$ then $C(v_1)
+  machine: For all $v_1,v_2 \in V$, if $v_1 \reaches v_2$ then $C(v_1)
   \subseteq C(v_2)$.
 \end{lemma}
 
@@ -264,7 +264,7 @@ a commit.
 \begin{corollary}[Commit sets modulo LCA are disjoint]
   \label{lem:commit-disjointness}
   In every reachable state $\Delta = ((V,E),N,C,H,L)$ of the abstract
-  machine: Forall distinct $b_1, b_2 \in dom(H)$, and $v_0, v_1, v_2
+  machine: For all distinct $b_1, b_2 \in dom(H)$, and $v_0, v_1, v_2
   \in V$ s.t.  $v_1 = H(b_1)$ and $v_2 = H(b_2)$ and $v_0 =
   L(b_1,b_2)$, the following is true: $(C(v_2) - C(v_0)) ~\cap~
   (C(v_1) - C(v_0)) = \emptyset$.
@@ -276,7 +276,7 @@ Lemmas~\ref{lem:lca-uniqueness} and~\ref{lem:commit-monotonicity}.
 \begin{theorem}[{\bf Convergence}]
   \label{thm:convergence}
   In every reachable state $\Delta$ = $((V,E),N,C,H,L)$ of the abstract
-  machine: Forall distinct $b_1, b_2 \in dom(H)$, and $v_1, v_2 \in V$
+  machine: For all distinct $b_1, b_2 \in dom(H)$, and $v_1, v_2 \in V$
   such that $v_1 = H(b_1)$ and $v_2 = H(b_2)$, the following is true:
   $C(v_1) = C(v_2) \Rightarrow N(v_1) = N(v_2)$.
 \end{theorem}

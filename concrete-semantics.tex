@@ -8,11 +8,11 @@ ignores system-level concerns to focus on the semantics of
 version-controlled state replication. In this section we present the
 \quark \emph{distributed} machine that addresses the key system-level
 concerns and provides a blueprint for a practical version-controlled
-replicated state machine. We first reify the the one-to-one
+replicated state machine. We first reify the one-to-one
 correspondence between replicas and branches we assumed informally in
 the previous section. This requires us to relax the assumption of the
 state $\Delta$ being shared synchronously across all replicas. Next we
-present an efficient method to track the version history with help
+present an efficient method to track the version history with the help
 of vector clocks. Finally, we outline an algorithm for garbage
 collecting older versions so that the version history need not grow
 unboundedly.
@@ -35,7 +35,7 @@ from branches to natural numbers:
 The state of the distributed machine is the triple $\delta = (B,N,H)$.
 Components $B$ and $H$ are indexed by $\texttt{ReplicaId}$ to let us
 denote their replica-local copies. For instance, replica $i$'s copy of
-the \emph{head map} $H$ is given by $H\;i$, which we abbreviate to
+the \emph{head map} $H$ is given by $(H\;i)$, which we abbreviate to
 $H_i$ for notational convenience. Like $H$ in
 Fig.~\ref{fig:git-semantics}, $H_i$ maps each branch to the version
 vector of its head. Note that two replicas may be out of sync w.r.t

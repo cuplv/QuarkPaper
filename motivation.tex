@@ -40,7 +40,7 @@ end
 shows a simplified interface of \C{Set} (abstract) data type in OCaml.
 The interface hides a reference to a set (\C{Set.t}), which can be
 updated in-place via \C{add} and \C{remove} operations. \C{Set} is an
-ordinary data type meant for for sequential execution. Under a
+ordinary data type meant for sequential execution. Under a
 concurrent execution with an asynchronously replicated state, \C{Set}
 would exhibit anamolous behaviors such as those in
 Fig.~\ref{fig:crdt-execs}.
@@ -145,7 +145,7 @@ each element} $e$ in the set~\cite{zawirski-thesis}. The vector clock
 of $e$ records the sequence number of the last \C{add($e$)} operation
 from each replica whose effect has been received and applied at the
 current replica. The \C{Add} and \C{Remove} effects on $e$ will now be
-tagged with $e$'s vector clock. When an \C{Remove} effect on $e$ is
+tagged with $e$'s vector clock. When a \C{Remove} effect on $e$ is
 received at a replica, it is applied only if the tagged vector clock
 is no less than $e$'s local vector clock, i.e., only if the arriving
 \C{Remove} has seen (i.e., causally succeeds) at least those
@@ -278,7 +278,7 @@ Convergence however is not an inherent virtue of the state-centric
 replication model. Fig.~\ref{fig:mrdt-exec-2} shows the state-centric
 analogue of the execution in Fig.~\ref{fig:crdt-exec-2} which
 diverges. Here $R_1$ and $R_2$ start with version $v_0 \,=\, \{e\}$.
-$R_2$ performs a \C{remove} and and an \C{add} making versions
+$R_2$ performs a \C{remove} and an \C{add} making versions
 $v_1$ and $v_2$ respectively. Simultaneously, $R_1$ performs a
 \C{remove} to make $v_3$. Replica $R_1$ now obtains $R_2$'s changes by
 merging versions $v_1$ and $v_2$ to make new versions $v_4$ and $v_5$
@@ -321,8 +321,8 @@ changes. The merges can be ordered in time as following: first $R_2
 (merging $v_2$ and $v_3$ resp.), then $R_3 \rightarrow R_4$ (merging
 $v_3)$, and finally $R_2 \rightarrow R_4$ (merging $v_1$). These
 merges collectively propagate the effects of \C{add} and \C{remove}
-operations to $R_1$ and $R_2$. And despite being ordered in time,
-they nonetheless result in a divergent execution ($v_5 \neq v_7$). The
+operations to $R_1$ and $R_4$. And despite being ordered in time,
+they nonetheless result in a divergent execution ($v_6 \neq v_8$). The
 problem here is that, although merges are executed linearly, the
 execution graph does not reflect this linearity; merges that end in
 $R_1$ in Fig.~\ref{fig:mrdt-exec-4} are effectively concurrent with
@@ -346,20 +346,20 @@ that are also common ancestors of $v_5$ and $v_6$. Likewise in
 Fig.~\ref{fig:mrdt-exec-4}, versions $v_6$ and $v_8$ have two LCAs --
 $v_1$ and $v_3$. Multiple LCAs is an indication that there exist
 merges prior in the execution graph that are effectively concurrent.
-Considering that our approach to convergence in state-centric model
-crucially relies on linearity of merges, presence of multiple LCAs
-opens up the possibility of divergence. We therefore define
-well-formed execution graphs as those where LCAs for every pair of
-concurrent versions is unique. As we prove in
-Sec.~\ref{sec:abstract-sem}, enforcing this structural
-well-formedness condition indeed guarantees the convergence of
-distributed executions. In Sec.~\ref{sec:concrete-sem}, we formalize a
-distributed runtime called \quark whose primary purpose is to enforce
-the well-formedness condition on distributed executions. In
-Sec.~\ref{sec:implementation}, we describe its implementation. The
-runtime makes it possible to automatically enforce convergence,
-letting us promote ordinary sequential data types to convergent
-replicated types by simply equipping them with a merge function.
-Thus, extending the \C{Set} interface of Fig.~\ref{fig:ocaml-set} with
-the two-line \C{Set.merge} function shown above is sufficient to
-obtain a convergent replicated set data type.
+Considering that our approach to convergence in the state-centric
+model crucially relies on the linearity of merges, presence of
+multiple LCAs opens up the possibility of divergence. We therefore
+define well-formed execution graphs as those where LCAs for every pair
+of concurrent versions is unique. As we prove in
+Sec.~\ref{sec:abstract-sem}, enforcing this structural well-formedness
+condition indeed guarantees the convergence of distributed executions.
+In Sec.~\ref{sec:concrete-sem}, we formalize a distributed runtime
+called \quark whose primary purpose is to enforce the well-formedness
+condition on distributed executions. In Sec.~\ref{sec:implementation},
+we describe its implementation. The runtime makes it possible to
+automatically enforce convergence, letting us promote ordinary
+sequential data types to convergent replicated types by simply
+equipping them with a merge function.  Thus, extending the \C{Set}
+interface of Fig.~\ref{fig:ocaml-set} with the two-line \C{Set.merge}
+function shown above is sufficient to obtain a convergent replicated
+set data type.

@@ -1,24 +1,26 @@
 \section{Related Work}
 \label{sec:related}
 
-The idea of replicated data types with three-way merge functions was
-first proposed in~\cite{mrdt}, where authors demonstrate an approach
-for deriving merge functions from first principles for various data
-types. However, the resultant \emph{mergeable replicated data types}
-(MRDTs) were never proved to be convergent. As we demonstrate for
-the \C{Set} data type in Sec.~\ref{sec:motivation}, simple merge
-functions with intuitive merge semantics can nonetheless lead to
-divergent executions. \quark can thus be used with MRDTs to preempt
-such executions and guarantee their convergence.
+Mergeable Replicated Data Types (MRDTs) were introduced
+in~\cite{mrdt}, where authors also demonstrate an approach for
+deriving merge functions from first principles.  Despite resulting in
+sensible merge semantics for several data types, their approach was
+never shown to guarantee the convergence of the resultant MRDTs.
+Indeed, as we demonstrate in Sec.~\ref{sec:motivation}, convergence
+of unrestricted MRDT executions cannot be guaranteed due to the
+presence of anomalies such as Fig.~\ref{fig:mrdt-exec-2} and
+Fig.~\ref{fig:mrdt-exec-4}. \quark fixes this problem by extending
+MRDTs with a runtime that limits their executions to those that are
+guaranteed to converge.
 
-Concurrent Revisions~\cite{BBL+10} proposes versioned state for
-shared-memory concurrent programs in order to guarantee determinism.
-The fork-join concurrency they consider is however too restrictive for
-the asynchronous distributed setting where replicas do not have a
-single coherent view of the system state.  Furthermore the
-hierarchical organization of the concurrent actors with a designated
-\emph{server} is inconsistent with the fully-decentralized model of
-execution adopted by several collaborative applications.
+% Concurrent Revisions~\cite{BBL+10} proposes versioned state for
+% shared-memory concurrent programs in order to guarantee determinism.
+% The fork-join concurrency they consider is however too restrictive for
+% the asynchronous distributed setting where replicas do not have a
+% single coherent view of the system state.  Furthermore the
+% hierarchical organization of the concurrent actors with a designated
+% \emph{server} is inconsistent with the fully-decentralized model of
+% execution adopted by several collaborative applications.
 
 State-centric replication was also explored in the context of
 CRDTs~\cite{crdts}. However, such state-based CRDTs require the
@@ -42,6 +44,32 @@ Sec.~\ref{sec:motivation} demonstrates). Conversely, \quark cannot
 reason about application-level invariants, such as $\C{balance}\ge 0$
 in a banking application. Thus both approaches confer complimentary
 benefits on application developers.
+
+% Type systems
+The meta-theory of \quark abstract machine
+(Sec.~\ref{sec:abstract-sem} bears resemblance to the type safety
+proofs carried out in Wright and Felleisen's style~\cite{WF92}.
+Theorem~\ref{thm:progress} (Progress) is analogous to the Progress
+lemma of type safety, and Theorem~\ref{thm:convergence} (Convergence)
+is analogous to Preservation.  However, unlike the type-based
+approaches, safety in \quark is enforced through run-time monitoring.
+Static enforcement of convergence in MRDTs using, for e.g., Session
+Types~\cite{HNMSession16}, is an interesting direction for future
+work.
+
+% Git
+\quark's programming model is inspired by distributed version control
+systems in general, and Git in particular. To the best of our
+knowledge, operational semantics of Git has never been formalized.
+This is not a serious concern considering that humans are heavily
+involved in Git workflows, and the complexity of version histories
+manifest by Git is bound by the limits of human cognition.
+Nonetheless, it is possible to construct Git version histories that
+result in non-convergent and counter-intuitive final
+states~\cite{tycon,russell}. Such anomalies are more likely to occur
+if Git version histories are manifest commensurately with distributed
+executions of computer programs. \quark's run-time monitoring
+pre-empts this possibility in our case.
 
 Finally, the implementation of \quark bears resemblance to
 Quelea~\cite{pldi15}. Both these systems are implemented as shim
