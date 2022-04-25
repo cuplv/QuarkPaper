@@ -1,6 +1,7 @@
 \section{Related Work}
 \label{sec:related}
 
+\balance
 Mergeable Replicated Data Types (MRDTs) were introduced
 in~\cite{mrdt}, where authors also demonstrate an approach for
 deriving merge functions from first principles.  Despite resulting in
@@ -33,7 +34,7 @@ in Secs.~\ref{sec:introduction} and~\ref{sec:motivation}.
 Several verification techniques, program analyses, and tools have been
 proposed to reason about the program behavior in a weakly-consistent
 distributed setting~\cite{bailis-vldb, alvaro-calm,
-gotsman-popl16,redblue-atc, redblue-osdi, ecinec}. These techniques
+gotsman-popl16, pldi15, redblue-osdi}. These techniques
 treat replicated storage as a black box with a fixed pre-defined
 consistency models. The focus is on assigning appropriate consistency
 levels to operations so as to preserve application integrity. Such an
@@ -72,10 +73,8 @@ executions of computer programs. \quark's run-time monitoring
 pre-empts this possibility in our case.
 
 Finally, the implementation of \quark bears resemblance to
-Quelea~\cite{pldi15}. Both these systems are implemented as shim
-layers on top of off-the-shelf distributed stores, and both offload
-low-level concerns to the underlying store. Quelea however enforces
-high-level invariants on applications built with CRDTs. Operations are
-assumed to be commutative and applications are assumed to be
-convergent. In contrast, \quark enforces convergence of data types
-that are otherwise not guaranteed to converge.
+Quelea~\cite{pldi15} as both systems offload low-level concerns to an
+underlying data store. While Quelea enforces high-level invariants on
+applications built with CRDTs that are assumed to be convergent,
+\quark enforces convergence of data types that are otherwise not
+guaranteed to converge.

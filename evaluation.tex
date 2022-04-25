@@ -80,7 +80,7 @@ perceive by a human user.
     \includegraphics[scale=0.4]{Figures/monkey_latency}
 \caption{Latency of writes to a shared document under \quark. }
 \label{fig:latency}
-\vspace*{-0.2in}
+\vspace*{-0.1in}
 \end{figure}
 
 For comparison against a baseline, we have implemented an ``SC''
@@ -114,7 +114,7 @@ Theorem~\ref{thm:progress}).
 \caption{Staleness increases as the number of concurrent editors
   increase.}
 \label{fig:monkey-staleness}
-% \vspace*{-0.2in}
+\vspace*{-0.2in}
 \end{figure}
 
 To understand the effect of \quark on
@@ -135,11 +135,11 @@ synchronized, and increasing the number of replicas reduces the number
 of opportunities for a replica to merge. The increase is roughly
 linear in the number of replicas as our implementation passes the lock
 around in a round-robin fashion. Despite the steady increase, the 90th
-percentile staleness values remain low -- in the order of 100ms with
-the number of replicas under 30, and in the order of 1s with number of
-replicas under 60. While further optimizations might reduce staleness,
-a non-trivial staleness overhead is inevitable in \quark due to our
-use of synchronized merges to guarantee convergence. 
+percentile staleness values remain low -- less than 1s with the
+number of replicas under 30, and less than 2s for number of replicas
+under 60. While further optimizations might reduce staleness, a
+non-trivial staleness overhead is inevitable in \quark due to our use
+of synchronized merges to guarantee convergence. 
 
 % Our approach thus
 % introduces staleness as novel tradeoff against convergence. While
@@ -186,7 +186,7 @@ mergeable counter values in our experiments.
     \includegraphics[scale=0.4]{Figures/rbmonkey_staleness}
   \caption{Staleness of key-value store merge operations.}
 \label{fig:rb-staleness}
-% \vspace*{-0.2in}
+%\vspace*{-0.2in}
 \end{figure}
 
 We use the same experimental setup as before -- an increasing number

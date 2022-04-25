@@ -239,7 +239,8 @@ $\forall n, n'.~ \C{merge}(n,n,n') \,=\, \C{merge}(n,n',n) \,=\, n$.
 Having a separate rule lets us elide this constraint.
 
 \paragraph{Properties} We now formalize the notable properties of the
-abstract machine and its executions.
+abstract machine and its executions\footnote{Proofs can be found in
+the Appendix}.
 
 \begin{lemma}[Uniqueness of LCA]
   \label{lem:lca-uniqueness}
@@ -297,7 +298,7 @@ with help of the following theorem:
   Every reachable state $\Delta = ((V,E),\\N,C,H,L)$ of the abstract
   machine is either: 
   \begin{itemize}
-    \item A ``quiescent'' state, where: $\forall b_1,b_2 \in
+    \item A ``quiescent'' state, where: $\\\forall b_1,b_2 \in
       dom(H).~C(H(b_1)) = C(H(b_2))$, Or
     \item An ``unstuck'' state, where there exist $b_1,b_2 \in dom(H)$
       that satisfy the pre-conditions of \rulelabel{Merge} or
@@ -308,15 +309,15 @@ with help of the following theorem:
 Convergence and Progress together ensure the soundness of the \quark
 abstract machine. 
 
-\noindent\paragraph{Ivy formalization} Appendix contains the manual
-proofs of the aforementioned theorems. In addition we also formalized
-the \quark abstract machine in Ivy~\cite{ivy}, and verified its
-properties automatically with help of Z3~\cite{z3}. Ivy is a
-multi-modal verification tool, whose primary purpose is to verify the
-design and implementations of distributed protocols. The key
-differentiating aspect of Ivy is its onus on predictable automation
-and decidable reasoning.  Automated proofs in Ivy are restricted to
-logical fragments for which the tool is a decision procedure. %Towards
+\noindent\paragraph{Ivy formalization}  In addition to the manual
+proofs, we also formalized the \quark abstract machine in
+Ivy~\cite{ivy} and verified its properties automatically with help of
+Z3~\cite{z3}. Ivy is a multi-modal verification tool, whose primary
+purpose is to verify the design and implementations of distributed
+protocols. The key differentiating aspect of Ivy is its onus on
+predictable automation and decidable reasoning.  Automated proofs in
+Ivy are restricted to logical fragments for which the tool is a
+decision procedure. %Towards
 % this end, Ivy checks the verification conditions for syntactic
 % confirmity with known decidable fragments, and provides feedback to
 % the user if the checks fail. The feedback helps users reorganize their

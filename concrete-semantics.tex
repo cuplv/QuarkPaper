@@ -152,15 +152,15 @@ from $k$, i.e., $H_j(b_k)$ happens to be ahead of $H_i(b_k)$. The new
 versions on $b_k$ known to $j$ but not $i$ are then simply replicated
 at $i$.
 
-\paragraph{Refinement} The following theorem asserts that the \quark
-distributed machine refines the abstract machine described in
-Sec.~\ref{sec:abstract-sem}:
+\paragraph{Refinement} The relationship between the \quark abstract
+(Sec.~\ref{sec:abstract-sem}) and distributed
+(Fig.~\ref{fig:quark-semantics}) machines is stated thus:
 \begin{theorem}[{\bf Refinement}]
   \label{thm:refinement}
   There exists a refinement relation $R$ relating abstract and
   concrete states such that:
   \begin{itemize}
-    \item $R$ relates initial abstract and concrete states, i.e.,
+    \item $R$ relates the initial abstract and concrete states, i.e.,
       $R(\Delta_{\odot},\delta_{\odot})$.
     \item Forall $\delta,\delta',\Delta$, if $R(\delta,\Delta)$ and
       $\delta \qstepsto \delta'$, then there exists a $\Delta'$ such
