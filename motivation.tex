@@ -15,7 +15,7 @@ module Set: sig
   val remove: elt -> unit (* Remove an element *)
 end
 \end{ocaml}
-\caption{An OCaml interface to \C{Set} abstract data type}
+\caption{An OCaml interface to \C{Set} abstract data type.}
 \label{fig:ocaml-set}
 \end{figure}
 
@@ -31,7 +31,7 @@ end
     \caption{}
     \label{fig:crdt-exec-2}
   \end{subfigure}
-\caption{Anamolous executions resulting from the Asynchronous
+\caption{Anamolous executions from asynchronous
   replication of \C{Set}. Dashed lines denote effect propagation.}
 \label{fig:crdt-execs}
 \end{figure}
@@ -113,7 +113,7 @@ $R_2$ respectively and issue two concurrent \C{remove($e$)}
 operations. Later, another client connects to $R_2$ and issues an
 \C{add($e$)} operation. The effects of these operations are
 asynchronously applied at remote replicas as shown in the figure,
-resulting in the divergent states at $R_1$ and $R_2$.
+causing divergent states at $R_1$ and $R_2$.
 
 Note that, unlike the execution in Fig.~\ref{fig:crdt-exec-1}, the
 conflicting operations in Fig.~\ref{fig:crdt-exec-2}, namely $R_1$'s
@@ -131,11 +131,11 @@ $R_1$'s \C{remove} considering that \C{add} is re-adding an
 element after a previous remove. Ordering concurrent removes ahead
 of adds uniformly on all replicas leads to an implementation of
 \C{Set} RDT where concurrent (re-)adds consistently \emph{win}
-over removes. Such an \emph{add-wins} set is useful, for instance, to
-implement a shared shopping cart where two users can concurrently
-remove an item from the cart, but if one of them re-adds it then the
-item should be present in the final cart\footnote{This is in fact the
-semantics of Amazon's shopping cart~\cite{dynamo}}.
+over removes. Such an \emph{add-wins} set is useful, for instance, in
+an online shopping cart where two users can concurrently
+remove an item, but if one of them re-adds it, then the
+item is present in the final cart\footnote{This is in fact the
+semantics of Amazon's online shopping cart~\cite{dynamo}.}.
 
 Extending the \C{Set} implementation from Fig.~\ref{fig:cc-set} with
 \emph{add-wins} semantics is however not trivial. The suggested
@@ -155,7 +155,7 @@ states despite the execution in Fig.~\ref{fig:crdt-exec-2} as $R_2$'s
 \C{remove} effectively becomes a no-op at $R_1$ due to there being at
 least one \C{add} operation on $e$ that it hasn't seen. The
 \emph{add-wins} \C{Set} interface is similar to Fig.~\ref{fig:cc-set},
-except that it requires an additional data structure to track
+except that it requires an additional data structure for
 element-wise vector clocks: 
 \begin{ocaml}
   val e_clock: (elt, v_clock) HashTable.t
@@ -211,8 +211,8 @@ be merged. The semantics of merge depends on the type of the state, so
 each MRDT is required to be equipped with a three-way \C{merge}
 function that merges concurrent versions of that type in presence of
 their (lowest) common ancestor version. In our running example, the
-state is a value of type \C{Set.t}, hence \C{Set.merge} function would
-have the type signature:
+state is a value of type \C{Set.t}, hence \C{Set.merge} would
+have the signature:
 \begin{center}
 \C{Set.merge} : \C{Set.t} $\rightarrow$ \C{Set.t} $\rightarrow$ \C{Set.t}
 $\rightarrow$ \C{Set.t}
