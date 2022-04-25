@@ -28,7 +28,7 @@
 %   branches, $b_1 \in dom(H)$ and $b_2 \in dom (H)$, has a single LCA given by
 %   $L(b_1,b_2)$, which is equal to $L(b_2,b_1)$.
 % \end{theorem}
-\begin{proof}[Proof of Lemma~\ref{lem:lca-uniqueness}]
+\begin{proof}[Proof of Lemma~3.4]
 
   By induction on $\Delta$. The initial state $\Delta_{\odot}$
   vacuously satisfies the unique LCA condition. The inductive step has
@@ -56,7 +56,7 @@
     of \rulelabel{Merge}, which requires that, for every branch $b''$ in
     the system, the LCA of $b''$ with merging branches $b$ and $b'$ be
     causally related, i.e, $L(b,b'') \reaches L(b',b'') ~\disj$
-    $L(b',b'') \reaches L(b,b'')$. Fig.~\ref{fig:merge-precondition}
+    $L(b',b'') \reaches L(b,b'')$. Fig.~7
     helps visualize this condition in the most general case when
     (\rom{1}). Branches $b$, $b'$, and $b''$ are distinct, and
     (\rom{2}). Their LCAs $L(b,b'')$ and $L(b',b'')$ lie on a distinct
@@ -85,7 +85,7 @@
 %   system. Forall $v_1,v_2 \in V$, if $v_1 \reaches v_2$ then $C(v_1)
 %   \subseteq C(v_2)$.
 % \end{lemma}
-\begin{proof}[Proof of Lemma~\ref{lem:commit-monotonicity}]
+\begin{proof}[Proof of Lemma~3.5]
   Straightforward induction on $\Delta$.
 \end{proof}
 
@@ -97,7 +97,7 @@
 %   L(b_1,b_2)$, the following is true:
 %   $(C(v_2) - C(v_0)) ~\cap~ (C(v_1) - C(v_0)) = \emptyset$.
 % \end{lemma}
-\begin{proof}[Proof of Lemma~\ref{lem:commit-disjointness}]
+\begin{proof}[Proof of Cor.~3.6]
   Proof by induction on $\Delta$. We consider the cases below starting
   with then {\sc Merge} case.
   \begin{itemize}
@@ -135,7 +135,7 @@
           separately.
           \begin{itemize}
             \item Case $L(b,b'') \reaches L(b',b'')$: From
-              Lemma~\ref{lem:commit-monotonicity} we know:
+              Lemma~3.5 we know:
               \begin{smathpar}
               \begin{array}{lr}
                 C(L(b,b'')) \subseteq C(L(b',b'')) & H4\\
@@ -194,7 +194,7 @@
               $IH1$ and $H4$, respectively.
 
             \item Case $L(b',b'') \reaches L(b,b'')$: From
-              Lemma~\ref{lem:commit-monotonicity} we know:
+              Lemma~3.5 we know:
               \begin{smathpar}
               \begin{array}{lr}
                 C(L(b',b'')) \subseteq C(L(b,b'')) & H5\\
@@ -312,11 +312,11 @@
 %   $v_1 = H(b_1)$ and $v_2 = H(b_2)$, the following is true:
 %   $C(v_1) = C(v_2) \Rightarrow N(v_1) = N(v_2)$.
 % \end{theorem}
-\begin{proof}[Proof of Theorem~\ref{thm:convergence}]
+\begin{proof}[Proof of Theorem~3.7]
   Proof by induction on $\Delta$. Base case trivially satisfies as
   there are no two branches in $\Delta_{\odot}$. Inductive proof has
   four cases corresponding to the four rules in
-  Fig.~\ref{fig:git-semantics}:
+  Fig.~6:
   \begin{itemize}
     \item Case {\sc Commit}: Branch $b$ is extended with a fresh
       commit $c$, hence there does not exist another branch whose head
@@ -375,7 +375,7 @@
             C(H(b)) \cup C(H(b'))= C(H(b')) & H2\\
           \end{array}
           \end{smathpar}
-          From Lemma~\ref{lem:commit-disjointness} on $\Delta$, we
+          From Cor.~3.6 on $\Delta$, we
           know the following:
           \begin{smathpar}
           \begin{array}{lr}
@@ -449,7 +449,7 @@
             C'(H'(b)) = C(H(b'')) & H6\\
           \end{array}
           \end{smathpar}
-          From Lemma~\ref{lem:commit-disjointness} on $H'(b')$ and
+          From Cor.~3.6 on $H'(b')$ and
           $H'(b'') = H(b'')$:
           \begin{smathpar}
           \begin{array}{lr}
@@ -500,7 +500,7 @@
               \end{smathpar}
               Note that $L(b',b'')$ is LCA of $H(b')$ and $H(b'')$,
               hence $L(b',b'') \reaches H(b')$. From
-              Lemma~\ref{lem:commit-monotonicity}, we get:
+              Lemma~3.5, we get:
               \begin{smathpar}
               \begin{array}{lr}
                 C(L(b',b'')) \subseteq C(H(b')) & H10\\
@@ -512,7 +512,7 @@
                 C(H(b)) \subseteq C(H(b')) &  H11\\
               \end{array}
               \end{smathpar}
-              Lemma~\ref{lem:commit-disjointness} on $H(b)$ and
+              Cor.~3.6 on $H(b)$ and
               $H(b')$ tells us:
               \begin{smathpar}
               \begin{array}{lr}
