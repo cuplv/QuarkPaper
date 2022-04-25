@@ -1,0 +1,573 @@
+%\section{Proofs}
+
+\begin{remark}
+  The following algebraic properties over sets are referred in the
+  proofs:
+  \begin{itemize}
+    \item {\bf Law1}: Set difference distributes over union. $\\\forall
+      (A,B,C).~ A - (B \cup C) ~=~ (A - B) \cap (A - C)$
+    \item {\bf Law2}: $\forall (A,B,C,D).~ (A - C) ~\cap~ (B - C) =
+      \emptyset \\
+      \hspace*{0.5in}\conj C \subseteq D ~\Rightarrow~ (A - D) ~\cap~ (B -
+      D) = \emptyset$
+    \item {\bf Law3}: Set union distributes over difference. $\\\forall
+      (A,B,C).~ (A \cup B) - C ~=~ (A - C) \cup (B-C)$
+    \item {\bf Law4}: Set union distributes over intersection.
+      $\\\forall (A,B,C).~ (A \cup B) \cap C ~=~ (A \cap C) \cup
+      (B \cap C)$
+    \item {\bf Law5}: $\forall (A,B,C,D).~ (A - C) ~\cap~ (B - C) =
+      \emptyset \\
+      \hspace*{0.5in}\conj A \subseteq B ~\Rightarrow~ A \subseteq C$
+  \end{itemize}
+\end{remark}
+
+% \begin{theorem}[{\bf Uniqueness of LCA}]
+%   Assuming that we start with the initial state $\Delta_{\odot}$, the
+%   transition rules in Fig.~\ref{fig:sem-head-pull} will always lead to
+%   a state $\Delta = ((V,E),B,H,L)$ where every distinct pair of
+%   branches, $b_1 \in dom(H)$ and $b_2 \in dom (H)$, has a single LCA given by
+%   $L(b_1,b_2)$, which is equal to $L(b_2,b_1)$.
+% \end{theorem}
+\begin{proof}[Proof of Lemma~\ref{lem:lca-uniqueness}]
+
+  By induction on $\Delta$. The initial state $\Delta_{\odot}$
+  vacuously satisfies the unique LCA condition. The inductive step has
+  three cases:
+  \begin{itemize}
+    \item Case {\sc Commit}: LCA function $L$ is not updated in this
+      case. Neither are any new branches created. Hence the proof
+      follows from the induction hypothesis (IH).
+
+    \item Case {\sc Fork}: We fork off a new branch $b'$ from $b$ in
+      this case. The LCA of $b$ and $b'$ in this case is clearly
+      $H(b)$ -- the version from which $b'$ is forked. Indeed, this is
+      the updated value of $L(b,b')$ in the conclusion.  
+      
+      For every other branch $b''$, the LCA of $b'$ and $b'$ (i.e.,
+      $L(b',b'')$) is same as the LCA of $b$ and $b''$ (i.e.,
+      $L(b,b'')$), which IH gurantees to be unique. This is because
+      every ancestor of $H(b')$ is either equal of $H(b)$ or is an
+      ancestor of $H(b)$, the hence lowest common ancestor of $H(b'')$
+      and $H(b)$ should also be the lowest common ancestor of $H(b'')$
+      and $H(b')$, which is indeed the updated value of $L(b,b'')$ in
+      the conclusion.
+
+    \item Case {\sc Merge}: The proof follows from the premise
+    of \rulelabel{Merge}, which requires that, for every branch $b''$ in
+    the system, the LCA of $b''$ with merging branches $b$ and $b'$ be
+    causally related, i.e, $L(b,b'') \reaches L(b',b'') ~\disj$
+    $L(b',b'') \reaches L(b,b'')$. Fig.~\ref{fig:merge-precondition}
+    helps visualize this condition in the most general case when
+    (\rom{1}). Branches $b$, $b'$, and $b''$ are distinct, and
+    (\rom{2}). Their LCAs $L(b,b'')$ and $L(b',b'')$ lie on a distinct
+    pair of branches not equal to $b$, $b'$, and $b''$. In the figure,
+    once you merge $b'$ into $b$, every version $v$ that is an
+    ancestor of $L(b',b'')$, i.e., $v \reaches L(b',b'')$, will be  a
+    common ancestor of $H(b)$ and $H(b'')$. Clearly, $L(b',b'')$ is
+    the lowest among such common ancestors. But the current lowest
+    common ancestor of $b$ and $b''$ is $L(b,b'')$. This leads to
+    the condition where there are two lowest common ancestors --
+    $L(b',b'')$ and $L(b,b'')$, \emph{unless} both are ancestrally
+    related. The premise
+    $L(b,b'') \reaches L(b',b'') \disj L(b',b'') \reaches L(b,b'')$
+    guarantees that they are causally-related, ensuring the uniqueness
+    of LCA.
+
+    \item Case {\sc FastFwd}: Similar to {\sc Merge}
+
+  \end{itemize}
+
+\end{proof}
+
+% \begin{lemma}[Commit sets grow monotonically]
+%   \label{lem:commit-monotonicity}
+%   Let $\Delta = ((V,E),N,C,H,L)$ be the state of a version-control
+%   system. Forall $v_1,v_2 \in V$, if $v_1 \reaches v_2$ then $C(v_1)
+%   \subseteq C(v_2)$.
+% \end{lemma}
+\begin{proof}[Proof of Lemma~\ref{lem:commit-monotonicity}]
+  Straightforward induction on $\Delta$.
+\end{proof}
+
+% \begin{lemma}[{\bf Commit sets modulo LCA are disjoint}]
+%   \label{lem:commit-disjointness}
+%   Let $\Delta = ((V,E),N,C,H,L)$ be the state of a version-control
+%   system. Forall distinct $b_1, b_2 \in dom(H)$, and $v_0, v_1, v_2
+%   \in V$ s.t.  $v_1 = H(b_1)$ and $v_2 = H(b_2)$ and $v_0 =
+%   L(b_1,b_2)$, the following is true:
+%   $(C(v_2) - C(v_0)) ~\cap~ (C(v_1) - C(v_0)) = \emptyset$.
+% \end{lemma}
+\begin{proof}[Proof of Lemma~\ref{lem:commit-disjointness}]
+  Proof by induction on $\Delta$. We consider the cases below starting
+  with then {\sc Merge} case.
+  \begin{itemize}
+    \item Case {\sc Merge}: In all the cases where $b_1 \neq b$ and
+      $b_2 \neq b$, proof follows from IH because nothing changes for
+      these branches in $\Delta'$. We shall therefore focus on the
+      case when one of $b_1$ or $b_2$ is $b$. Without loss of
+      generality, let's assume $b_1 = b$. Two cases now depending on
+      what $b_2$ is:
+      \begin{itemize}
+        \item Case $b_2 = b'$: From the {\sc Merge} rule, it's clear
+          that $v_1 = H'(b) = v$ and $v_2 = H'(b') = H(b')$ and $v_0 =
+          L'(b,b') = H(b') = v_2$. Since $v_2 = v_0$, $C(v_2) - C(v_0)
+          = \emptyset$, hence the proof.
+        \item Case $b_2 \neq b'$. Let $b_2 = b'' \neq b'$. Hence $v_1 =
+          H'(b)$, $v_2 = H'(b'') = H(b'')$, and $v_0 = L'(b,b'')$,
+          which would either be $L(b,b'')$ or $L(b',b'')$
+          (see the premise of {\sc Merge}). For notational
+          convenience let's use $v'$ to denote $H'(b') = H(b')$, $v''$
+          to denote $H'(b'') = H(b'')$, and $v_{old}$ to denote
+          $H(b)$. The hypotheses are listed below:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(v_{old}) - C(L(b,b'')) ~\cap~ C(v'') - C(L(b,b'')) =
+              \emptyset & IH1\\
+            C(v') - C(L(b',b'')) ~\cap~ C(v'') - C(L(b',b'')) =
+              \emptyset & IH2\\
+            L(b,b'') \reaches L(b',b'') \disj L(b',b'') \reaches
+              L(b,b'') & H1\\
+            C(H(b')) \supset C(L(b,b')) & H2\\
+            C(H(b)) \supset C(L(b,b')) & H3\\
+          \end{array}
+          \end{smathpar}
+          We will now destruct $H1$ and consider each disjunct
+          separately.
+          \begin{itemize}
+            \item Case $L(b,b'') \reaches L(b',b'')$: From
+              Lemma~\ref{lem:commit-monotonicity} we know:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(L(b,b'')) \subseteq C(L(b',b'')) & H4\\
+              \end{array}
+              \end{smathpar}
+              The Goal is to prove the following:
+              \begin{smathpar}
+              \begin{array}{c}
+                C'(v) - C'(L'(b,b'')) ~\cap~ C'(v'') - C'(L'(b,b''))
+                ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              We shall now rewrite the goal through a series of
+              equalities. First, since $C'(v) = C(v_{old}) \cup
+              C(v')$, and $L'(b,b'') = L(b',b'')$ (since $L(b,b'')
+              \reaches L(b',b'')$ as per our assumption in this case),
+              and $C'(v'') = C(v'')$:
+              \begin{smathpar}
+              \begin{array}{p{\columnwidth}}
+                $(C(v_{old}) \cup C(v')) - C(L(b',b'')) ~\cap~ C(v'') - C(L(b',b''))
+                ~=~ \emptyset$\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using Algebraic Law 3:
+              \begin{smathpar}
+              \begin{array}{c}
+                (C(v_{old}) - C(L(b',b'')) ~\cup~ C(v') -
+                C(L(b',b''))) \\ ~\cap~ C(v'') - C(L(b',b'')) ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using Algebraic Law 4:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v_{old}) - C(L(b',b'')) ~\cap~ C(v'') -
+                C(L(b',b'')) \\
+                \hspace*{0.1in}
+                \cup~~ C(v') - C(L(b',b'')) ~\cap~ C(v'') - C(L(b',b''))
+                ~~=~~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using IH2:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v_{old}) - C(L(b',b'')) ~\cap~ C(v'') -
+                C(L(b',b'')) ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Applying Algebraic Law2 with $C := L(b,b'')$:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v_{old}) - C(L(b,b'')) ~\cap~ C(v'') - C(L(b,b''))
+                ~=~ \emptyset \\~\conj~ L(b,b'') \subseteq L(b',b'')\\
+              \end{array}
+              \end{smathpar}
+              Now both conjuncts of the goal follow from hypotheses
+              $IH1$ and $H4$, respectively.
+
+            \item Case $L(b',b'') \reaches L(b,b'')$: From
+              Lemma~\ref{lem:commit-monotonicity} we know:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(L(b',b'')) \subseteq C(L(b,b'')) & H5\\
+              \end{array}
+              \end{smathpar}
+              The Goal is to prove the following:
+              \begin{smathpar}
+              \begin{array}{c}
+                C'(v) - C'(L'(b,b'')) ~\cap~ C'(v'') - C'(L'(b,b''))
+                ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              We shall now rewrite the goal through a series of
+              equalities. First, since $C'(v) = C(v_{old}) \cup
+              C(v')$, and $L'(b,b'') = L(b,b'')$ (since $L(b',b'')
+              \reaches L(b,b'')$ as per our assumption in this case),
+              and $C'(v'') = C(v'')$:
+              \begin{smathpar}
+              \begin{array}{c}
+                (C(v_{old}) \cup C(v')) - C(L(b,b'')) \\
+                ~~\cap~ C(v'') - C(L(b,b''))
+                ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using Algebraic Law 3:
+              \begin{smathpar}
+              \begin{array}{c}
+                (C(v_{old}) - C(L(b,b'')) ~\cup~ C(v') - C(L(b,b'')))\\
+                ~~\cap~ C(v'') - C(L(b,b'')) ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using Algebraic Law 4:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v_{old}) - C(L(b,b'')) ~\cap~ C(v'') -
+                C(L(b,b'')) \\
+                \hspace*{0.1in}
+                \cup~~ C(v') - C(L(b,b'')) ~\cap~ C(v'') - C(L(b,b''))
+                ~~=~~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Rewrite using IH1:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v') - C(L(b,b'')) ~\cap~ C(v'') -
+                C(L(b,b'')) ~=~ \emptyset\\
+              \end{array}
+              \end{smathpar}
+              Apply Algebraic Law2 with $C := L(b',b'')$:
+              \begin{smathpar}
+              \begin{array}{c}
+                C(v') - C(L(b',b'')) ~\cap~ C(v'') - C(L(b',b''))
+                ~=~ \emptyset \\
+                ~~\conj~ L(b',b'') \subseteq L(b,b'')\\
+              \end{array}
+              \end{smathpar}
+              Now both conjuncts of the goal follow from hypotheses
+              $IH2$ and $H5$, respectively.
+          \end{itemize}
+      \end{itemize}
+
+    \item Case {\sc FastFwd}: Fast forwarding is a special case of
+      merge, hence the proof is going to be very similar to the {\sc
+      Merge} case. To reduce the {\sc FastFwd} case to {\sc Merge},
+      we make the following observations about the diferences between
+      both the rules:
+      \begin{itemize}
+        \item The subsumption relation $C(H(b)) \supset C(L(b,b'))$ in
+          the premise of {\sc Merge} is replaced with equality in {\sc
+          FastFwd}, but this is irrelevant is the subsumption premise
+          is never used in the proof of {\sc Merge} case.
+
+        \item $N'(v) = N(H(b'))$ in {\sc FastFwd} whereas it is
+          computed using {\sf merge} in {\sc Merge}. However, the
+          current theorem says nothing about $N$, and the rest of
+          $\Delta$ is independent of $N$, hence this is irrelevant.
+
+        \item $C'(H'(b)) = C(H(b'))$ in the conclusion of {\sc
+          FastFwd} whereas it is equal to $C(H(b)) \cup C(H(b'))$ in
+          {\sc Merge}. However since $C(H(b)) = C(L(b,b')) \subset
+          C(H(b'))$ in the premise of {\sc FastFwd}, $C'(H'(b))$ in
+          the conclusion is indeed equal to $C(H(b)) \cup C(H(b'))$
+          like in {\sc Merge}.
+      \end{itemize}
+      Consequently, we can reuse the proof of {\sc Merge} as a proof
+      of {\sc FastFwd}.
+
+    \item Case {\sc Fork}: Branch $b'$ is forked from branch $b$. In
+      all the cases where $b_1 \neq b'$ and $b_2 \neq b'$, proof
+      follows from IH because nothing changes for these branches in
+      $\Delta'$. We shall therefore focus on the case when one of
+      $b_1$ or $b_2$ is $b'$. Without loss of generality, let's assume
+      $b_2 = b$. We now have two cases depending on what values $b_1$
+      can take:
+      \begin{itemize}
+        \item Case $b_1 = b$: In this case $L'(b_1,b_2) = L'(b,b') =
+          H(b) = H'(b)$. Hence, $C'(H'(b_1)) - L'(b_1,b_2)$ is equal
+          to $C'(H'(b)) - C'(H'(b)) = \emptyset$. Proof follows.
+
+        \item Case $b_1 = b'' \neq b$: In this case, the proof follows
+          straightforwardly from the inductive hypothesis that asserts
+          the lemma for $b$ and $b''$ in $\Delta$ because $L'(b',b'')$
+          $=$ $L(b,b'')$ and $C(H(b')) = C(H(b))$.
+      \end{itemize}
+
+    \item Case {\sc Commit}: Proof is trivial because $c$ is a fresh
+      commit id that does not exist in $\Delta$.
+
+  \end{itemize}
+\end{proof}
+
+% \begin{theorem}[{\bf Convergence}]
+%   Let $\Delta = ((V,E),N,C,H,L)$ be the state of a version-control
+%   system. Forall distinct $b_1, b_2 \in dom(H)$, and $v_1, v_2 \in V$ s.t.
+%   $v_1 = H(b_1)$ and $v_2 = H(b_2)$, the following is true:
+%   $C(v_1) = C(v_2) \Rightarrow N(v_1) = N(v_2)$.
+% \end{theorem}
+\begin{proof}[Proof of Theorem~\ref{thm:convergence}]
+  Proof by induction on $\Delta$. Base case trivially satisfies as
+  there are no two branches in $\Delta_{\odot}$. Inductive proof has
+  four cases corresponding to the four rules in
+  Fig.~\ref{fig:git-semantics}:
+  \begin{itemize}
+    \item Case {\sc Commit}: Branch $b$ is extended with a fresh
+      commit $c$, hence there does not exist another branch whose head
+      has same commit set as $H'(b)$. 
+
+    \item Case {\sc Fork}: In all the cases where $b_1 \neq b'$ and
+      $b_2 \neq b'$, proof follows from IH because nothing changes for
+      these branches in $\Delta'$. We shall therefore focus on the
+      case when one of $b_1$ or $b_2$ is $b'$. Without loss of
+      generality, let's assume $b_2 = b$. Two cases now depending on
+      what $b_1$ is:
+      \begin{itemize}
+        \item  Case $b_1 = b$: Proof by definition as {\sc Fork}
+          defines $C'(H'(b')) = C(H(b)) = C'(H'(b))$ and $N'(H'(b')) =
+          N(H(b)) = N'(H'(b))$. 
+        \item Case $b_1 = b'' \neq b$: Proof follows from IH relating
+          $b_1$ and $b$ in $\Delta$ because $C'(H'(b')) = C(H(b))$ and $N'(H'(b')) =
+          N(H(b))$.
+      \end{itemize}
+
+    \item Case {\sc FastFwd}: The proof is similar to the {\sc Fork}
+      case since $C'(H'(b)) = C(H(b')) = C'(H'(b'))$ and $N'(H'(b)) =
+      N(H(b')) = N'(H'(b'))$.
+
+    \item Case {\sc Merge}:  In all the cases where $b_1 \neq b$ and
+      $b_2 \neq b$, proof follows from IH because nothing changes for
+      these branches in $\Delta'$. We shall therefore focus on the
+      case when one of $b_1$ or $b_2$ is $b$. Without loss of
+      generality, let's assume $b_1 = b$. Two cases now depending on
+      what $b_2$ is:
+      \begin{itemize}
+        \item Case $b_2 = b'$: The relevant premise of {\sc Merge} is
+          reproduced below:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) \supset C(L(b,b')) & H0\\
+          \end{array}
+          \end{smathpar}
+          We shall prove that $C'(H'(b_1))$ cannot be equal to
+          $C'(H'(b_2))$ by first assuming that they are equal and then
+          deriving a contradiction.
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b_1)) = C'(H'(b_2)) & H1\\
+          \end{array}
+          \end{smathpar}
+          Since $b_1 = b$, and $b_2 = b'$, and $C'(H'(b')) = C(H(b'))$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) = C(H(b')) & \\
+          \end{array}
+          \end{smathpar}
+          Since $C'(H'(b')) = C(H(b)) \cup C(H(b'))$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) \cup C(H(b'))= C(H(b')) & H2\\
+          \end{array}
+          \end{smathpar}
+          From Lemma~\ref{lem:commit-disjointness} on $\Delta$, we
+          know the following:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) - C(L(b,b'))\\
+            \hspace*{0.5in}~\cap~ C(H(b')) - C(L(b,b')) ~=~
+            \emptyset & H3\\
+          \end{array}
+          \end{smathpar}
+          Rewriting H3 using H2:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) - C(L(b,b'))\\
+            \hspace*{0.25in}\cap~~ (C(H(b)) \cup C(H(b')) - C(L(b,b')) ~=~
+            \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Rewriting using Algebraic Law3:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) - C(L(b,b')) ~~\cap\\
+            (C(H(b)) - C(L(b,b')) ~\cup~ C(H(b')) - C(L(b,b'))) ~=~ \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Rewriting using Algebraic Law4:
+          \begin{smathpar}
+          \begin{array}{lr}
+            (C(H(b)) - C(L(b,b')) ~\cap~ C(H(b)) - C(L(b,b')))\\
+            ~~\cup~~ (C(H(b)) - C(L(b,b')) ~\cap~ C(H(b')) - C(L(b,b'))) 
+            ~=~ \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Simplifying, and Rewriting using $H3$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) - C(L(b,b')) ~=~ \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Which is possible if and only if:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) \subseteq C(L(b,b')) & H4\\
+          \end{array}
+          \end{smathpar}
+          $H0$ and $H4$ now result in a contradiction.
+
+        \item Case $b_2 = b'' \neq b'$: Premises of {\sc Merge}:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) \supset C(L(b,b'))& H1\\
+            C(H(b')) \supset C(L(b,b'))& H2\\
+            L(b,b'') \reaches L(b',b'') \disj L(b',b'') \reaches
+            L(b,b'') & H3\\
+          \end{array}
+          \end{smathpar}
+          From the conclusion of {\sc Merge}:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) = C(H(b)) \cup C(H(b')) & H4\\
+            C'(H'(b'')) = C(H(b'')) & H5\\
+          \end{array}
+          \end{smathpar}
+          And the premise of the theorem:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) = C'(H'(b'')) & \\
+          \end{array}
+          \end{smathpar}
+          Due to $H5$, this is equivalent to:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) = C(H(b'')) & H6\\
+          \end{array}
+          \end{smathpar}
+          From Lemma~\ref{lem:commit-disjointness} on $H'(b')$ and
+          $H'(b'') = H(b'')$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) - C'(L'(b,b'')) ~\cap\\
+            \hspace*{0.5in}C(H(b'')) - C'(L'(b,b''))
+            ~=~ \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Rewriting using $H6$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) - C'(L'(b,b'')) ~=~ \emptyset & \\
+          \end{array}
+          \end{smathpar}
+          Hence:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C'(H'(b)) \subseteq C'(L'(b,b''))
+          \end{array}
+          \end{smathpar}
+          Rewriting using $H4$:
+          \begin{smathpar}
+          \begin{array}{lr}
+            C(H(b)) \cup C(H(b')) ~\subseteq~ C'(L'(b,b'')) & H7\\
+          \end{array}
+          \end{smathpar}
+          Let us distruct $H3$ and consider the two disjuncts
+          separately:
+          \begin{itemize}
+            \item Case $L(b,b'') \reaches L(b',b'')$: From the
+              conclusion of {\sc Merge}:
+              \begin{smathpar}
+              \begin{array}{lr}
+                L'(b,b'') = L(b',b'') & H8\\
+              \end{array}
+              \end{smathpar}
+              Rewriting $H7$ using $H8$:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(H(b)) \cup C(H(b')) ~\subseteq~ C(L(b',b'')) & H7\\
+              \end{array}
+              \end{smathpar}
+              Which tells us:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(H(b)) \subseteq C(L(b',b'')) & H9 \\
+              \end{array}
+              \end{smathpar}
+              Note that $L(b',b'')$ is LCA of $H(b')$ and $H(b'')$,
+              hence $L(b',b'') \reaches H(b')$. From
+              Lemma~\ref{lem:commit-monotonicity}, we get:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(L(b',b'')) \subseteq C(H(b')) & H10\\
+              \end{array}
+              \end{smathpar}
+              From $H9$ and $H10$:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(H(b)) \subseteq C(H(b')) &  H11\\
+              \end{array}
+              \end{smathpar}
+              Lemma~\ref{lem:commit-disjointness} on $H(b)$ and
+              $H(b')$ tells us:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(H(b)) - C(L(b,b')) ~\cap\\
+                \hspace*{0.5in}C(H(b')) - C(L(b,b')) ~=~
+                \emptyset & H12\\
+              \end{array}
+              \end{smathpar}
+              Applying Algebraic Law 5 on $H11$ and $H12$:
+              \begin{smathpar}
+              \begin{array}{lr}
+                C(H(b)) \subseteq C(L(b,b'))
+              \end{array}
+              \end{smathpar}
+              Which contradicts $H1$. Hence $C'(H'(b))$ cannot be
+              equal to $C'(H'(b''))$.
+
+            \item Case $L(b',b'') \reaches L(b,b'')$: Very similar to
+              the above case. Using the similar approach as above, we
+              derive $C(H(b')) \subseteq C(H(b))$ (the opposite of
+              $H11$), which leads us to $C(H(b')) \subseteq
+              C(L(b,b'))$, thus contradicting $H2$.
+          \end{itemize}
+      \end{itemize}
+  \end{itemize}
+\end{proof}
+
+%%\begin{proof}[Proof of Theorem~\ref{thm:progress}]
+%%  By induction on $\Delta$. Non-trivial cases are discussed below.
+%%  \begin{itemize}
+%%    \item \rulelabel{Commit}: Let $b$ be the branch on which a
+%%      new version $v$ is committed. Destructing IH gives us two
+%%      subcases:
+%%      \begin{itemize}
+%%        \item Case 1 - System is in queiscent state before commit: If
+%%          $b$ is the only branch, then system is again in queiscent
+%%          state after commit. Else, there exists a branch $b'$ s.t.
+%%          $L(b,b')$ exists and is unique
+%%          (Lemma~\ref{lem:lca-uniqueness}). Linearity of merges
+%%          guarantees that in queiscent state all LCAs are linearly
+%%          ordered. Since \rulelabel{commit} doesn't change $L$, and
+%%          $v$ is a new version, $v$ can be committed onto $b'$.
+
+%%        \item Case 2 - System is mergeable state before commit: Since
+%%          \rulelabel{Commit} doesn't alter $L$, whatever branches are
+%%          mergeable before the commit, remain mergeable after the commit.
+%%      \end{itemize}
+
+%%    \item \rulelabel{Fork}: Let $b'$ is the new branch forked from
+%%      $b$. If system was in queiscent state before, then it is again
+%%      in the queiscent state as $H(b') = H(b)$. Else, if the system
+%%      was in a mergeable state before, then it is again in the
+%%      mergeable state as \rulelabel{Fork} doesn't change the LCA
+%%      relationships among existing branches.
+%%  \end{itemize}
+%%\end{proof}
+
+
